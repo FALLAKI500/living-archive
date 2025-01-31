@@ -9,6 +9,17 @@ import { useAuth } from "@/contexts/AuthContext"
 import type { Property, CreatePropertyInput } from "@/types/property"
 import { PropertyInput } from "./PropertyInput"
 import { PropertyStatusDropdown } from "./PropertyStatusDropdown"
+import { Loader2 } from "lucide-react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import * as z from "zod"
+
+const propertySchema = z.object({
+  name: z.string().min(1, "Name is required"),
+  location: z.string().min(1, "Location is required"),
+  price: z.number().min(0, "Price must be a positive number"),
+  status: z.enum(["Available", "Rented"]),
+  image_url: z.string().optional(),
+})
 
 interface PropertyFormProps {
   property?: Property
@@ -20,6 +31,7 @@ export function PropertyForm({ property }: PropertyFormProps) {
   const { user } = useAuth()
 
   const form = useForm<CreatePropertyInput>({
+    resolver: zodResolver(propertySchema),
     defaultValues: {
       name: property?.name ?? "",
       location: property?.location ?? "",
@@ -98,7 +110,14 @@ export function PropertyForm({ property }: PropertyFormProps) {
           required={false}
         />
         <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? "Saving..." : property ? "Update Property" : "Add Property"}
+          {isLoading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              {property ? "Updating..." : "Adding..."}
+            </>
+          ) : (
+            property ? "Update Property" : "Add Property"
+          )}
         </Button>
       </form>
     </Form>
