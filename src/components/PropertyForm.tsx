@@ -52,23 +52,36 @@ export function PropertyForm({ property }: PropertyFormProps) {
           .update(values)
           .eq("id", property.id)
         if (error) throw error
+        return { type: "update", name: values.name }
       } else {
         const { error } = await supabase
           .from("properties")
           .insert([{ ...values, user_id: user.id }])
         if (error) throw error
+        return { type: "create", name: values.name }
       }
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["properties"] })
-      toast.success(
-        property ? "Property updated successfully" : "Property added successfully"
-      )
+      if (result.type === "update") {
+        toast.success(`Property "${result.name}" updated successfully`, {
+          description: "Your changes have been saved.",
+          duration: 3000,
+        })
+      } else {
+        toast.success(`Property "${result.name}" added successfully`, {
+          description: "The new property has been created.",
+          duration: 3000,
+        })
+      }
       form.reset()
     },
     onError: (error) => {
       console.error("Error saving property:", error)
-      toast.error("Failed to save property")
+      toast.error("Failed to save property", {
+        description: error instanceof Error ? error.message : "Please try again later",
+        duration: 5000,
+      })
     },
     onSettled: () => {
       setIsLoading(false)
