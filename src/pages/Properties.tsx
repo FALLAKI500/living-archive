@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react"
-import { useQuery } from "@tanstack/react-query"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { Layout } from "@/components/Layout"
 import { PropertyCard } from "@/components/PropertyCard"
 import { PropertyForm } from "@/components/PropertyForm"
@@ -20,6 +20,7 @@ export default function Properties() {
   const [searchTerm, setSearchTerm] = useState("")
   const [priceRange, setPriceRange] = useState({ min: 0, max: Infinity })
   const [selectedStatus, setSelectedStatus] = useState<"all" | "Available" | "Rented">("all")
+  const queryClient = useQueryClient()
 
   const { data: properties = [], isLoading } = useQuery({
     queryKey: ["properties"],
@@ -45,8 +46,8 @@ export default function Properties() {
           table: 'properties'
         },
         () => {
-          // Refetch properties when changes occur
-          window.location.reload()
+          // Invalidate and refetch properties when changes occur
+          queryClient.invalidateQueries({ queryKey: ["properties"] })
         }
       )
       .subscribe()
@@ -54,7 +55,7 @@ export default function Properties() {
     return () => {
       supabase.removeChannel(channel)
     }
-  }, [])
+  }, [queryClient])
 
   const filteredProperties = properties.filter((property) => {
     const matchesSearch =
