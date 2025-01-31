@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { signUpUser } from "@/integrations/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, Mail, Lock } from "lucide-react";
+import { Loader2, Mail, Lock, AlertCircle } from "lucide-react";
 
 export default function Auth() {
   const [email, setEmail] = useState("");
@@ -56,25 +56,30 @@ export default function Auth() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <div className="w-full max-w-md space-y-8">
-        <div className="text-center">
+      <div className="w-full max-w-md space-y-8 animate-fade-in">
+        <div className="text-center space-y-2">
           <h1 className="text-4xl font-bold tracking-tight text-primary">
-            Welcome
+            Welcome Back
           </h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Sign in to access your account or create a new one
+          <p className="text-sm text-muted-foreground">
+            Sign in to your account or create a new one
           </p>
         </div>
 
         <Card className="p-6">
           <Tabs defaultValue="signin" className="space-y-6">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="signin">Sign In</TabsTrigger>
-              <TabsTrigger value="signup">Sign Up</TabsTrigger>
+              <TabsTrigger value="signin" className="data-[state=active]:animate-scale-in">
+                Sign In
+              </TabsTrigger>
+              <TabsTrigger value="signup" className="data-[state=active]:animate-scale-in">
+                Sign Up
+              </TabsTrigger>
             </TabsList>
 
             {error && (
-              <Alert variant="destructive" className="my-4">
+              <Alert variant="destructive" className="my-4 animate-fade-in">
+                <AlertCircle className="h-4 w-4" />
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
@@ -91,7 +96,7 @@ export default function Auth() {
                       placeholder="Enter your email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="pl-10"
+                      className="pl-10 transition-shadow duration-200 focus:ring-2 focus:ring-primary"
                       required
                     />
                   </div>
@@ -106,12 +111,16 @@ export default function Auth() {
                       placeholder="Enter your password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="pl-10"
+                      className="pl-10 transition-shadow duration-200 focus:ring-2 focus:ring-primary"
                       required
                     />
                   </div>
                 </div>
-                <Button type="submit" className="w-full" disabled={loading}>
+                <Button 
+                  type="submit" 
+                  className="w-full transition-all duration-200 hover:scale-[1.02]" 
+                  disabled={loading}
+                >
                   {loading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -136,7 +145,7 @@ export default function Auth() {
                       placeholder="Enter your email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="pl-10"
+                      className="pl-10 transition-shadow duration-200 focus:ring-2 focus:ring-primary"
                       required
                     />
                   </div>
@@ -151,12 +160,16 @@ export default function Auth() {
                       placeholder="Enter your password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className="pl-10"
+                      className="pl-10 transition-shadow duration-200 focus:ring-2 focus:ring-primary"
                       required
                     />
                   </div>
                 </div>
-                <Button type="submit" className="w-full" disabled={loading}>
+                <Button 
+                  type="submit" 
+                  className="w-full transition-all duration-200 hover:scale-[1.02]" 
+                  disabled={loading}
+                >
                   {loading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
