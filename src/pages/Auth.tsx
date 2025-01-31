@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { supabase } from "@/integrations/supabase/client";
+import { signUpUser } from "@/integrations/supabase/client";
 
 export default function Auth() {
   const [email, setEmail] = useState("");
@@ -36,11 +36,7 @@ export default function Auth() {
     e.preventDefault();
     try {
       setLoading(true);
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-      });
-      if (error) throw error;
+      await signUpUser(email, password);
       toast({
         title: "Check your email",
         description: "We've sent you a confirmation link to complete your sign up.",
