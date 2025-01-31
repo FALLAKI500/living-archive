@@ -12,33 +12,48 @@ export type Database = {
       invoices: {
         Row: {
           amount: number
+          amount_paid: number
           created_at: string | null
+          daily_rate: number
+          days_rented: number
           description: string | null
           due_date: string
+          end_date: string | null
           id: string
           property_id: string
+          start_date: string | null
           status: Database["public"]["Enums"]["invoice_status"] | null
           tenant_id: string
           updated_at: string | null
         }
         Insert: {
           amount: number
+          amount_paid?: number
           created_at?: string | null
+          daily_rate?: number
+          days_rented?: number
           description?: string | null
           due_date: string
+          end_date?: string | null
           id?: string
           property_id: string
+          start_date?: string | null
           status?: Database["public"]["Enums"]["invoice_status"] | null
           tenant_id: string
           updated_at?: string | null
         }
         Update: {
           amount?: number
+          amount_paid?: number
           created_at?: string | null
+          daily_rate?: number
+          days_rented?: number
           description?: string | null
           due_date?: string
+          end_date?: string | null
           id?: string
           property_id?: string
+          start_date?: string | null
           status?: Database["public"]["Enums"]["invoice_status"] | null
           tenant_id?: string
           updated_at?: string | null
