@@ -41,6 +41,8 @@ export function InvoiceForm({ propertyId, tenantId, onSuccess }: InvoiceFormProp
         daily_rate: parseFloat(values.daily_rate as string),
         start_date: startDate ? format(startDate, 'yyyy-MM-dd') : null,
         end_date: endDate ? format(endDate, 'yyyy-MM-dd') : null,
+        due_date: endDate ? format(endDate, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'), // Set due_date to end_date or today
+        amount: 0, // This will be calculated by the trigger
         description: values.description as string,
       })
 
