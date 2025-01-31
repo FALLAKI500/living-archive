@@ -1,27 +1,19 @@
 import { useState } from "react"
-import { useForm } from "react-hook-form"
-import { useQueryClient, useMutation } from "@tanstack/react-query"
-import { supabase } from "@/integrations/supabase/client"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form"
-import { toast } from "sonner"
-import { CalendarIcon } from "lucide-react"
 import { format } from "date-fns"
 import { Calendar } from "@/components/ui/calendar"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Textarea } from "@/components/ui/textarea"
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import { CalendarIcon } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { supabase } from "@/integrations/supabase/client"
+import { useToast } from "@/hooks/use-toast"
 
 interface InvoiceFormProps {
   propertyId: string
@@ -31,117 +23,98 @@ interface InvoiceFormProps {
 
 export function InvoiceForm({ propertyId, tenantId, onSuccess }: InvoiceFormProps) {
   const [date, setDate] = useState<Date>()
-  const queryClient = useQueryClient()
+  const { toast } = useToast()
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const form = useForm({
-    defaultValues: {
-      amount: "",
-      description: "",
-    },
-  })
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault()
+    setIsSubmitting(true)
 
-  const createInvoiceMutation = useMutation({
-    mutationFn: async (values: { amount: string; description: string }) => {
+    try {
+      const formData = new FormData(e.currentTarget)
+      const values = Object.fromEntries(formData.entries())
+
       const { error } = await supabase.from("invoices").insert({
         property_id: propertyId,
         tenant_id: tenantId,
-        amount: parseFloat(values.amount),
-        due_date: date ? format(date, 'yyyy-MM-dd') : undefined, // Format date as YYYY-MM-DD string
-        description: values.description,
+        amount: parseFloat(values.amount as string),
+        due_date: date ? format(date, 'yyyy-MM-dd') : undefined,
+        description: values.description as string,
       })
-      if (error) throw error
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["invoices"] })
-      toast.success("Invoice created successfully")
-      form.reset()
-      setDate(undefined)
-      onSuccess?.()
-    },
-    onError: (error) => {
-      console.error("Error creating invoice:", error)
-      toast.error("Failed to create invoice")
-    },
-  })
 
-  const onSubmit = (values: { amount: string; description: string }) => {
-    if (!date) {
-      toast.error("Please select a due date")
-      return
+      if (error) throw error
+
+      toast({
+        title: "Success",
+        description: "Invoice created successfully",
+      })
+
+      if (onSuccess) onSuccess()
+    } catch (error) {
+      console.error("Error creating invoice:", error)
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to create invoice. Please try again.",
+      })
+    } finally {
+      setIsSubmitting(false)
     }
-    createInvoiceMutation.mutate(values)
   }
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="space-y-2">
+        <Label htmlFor="amount">Amount</Label>
+        <Input
+          id="amount"
           name="amount"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Amount</FormLabel>
-              <FormControl>
-                <Input
-                  type="number"
-                  step="0.01"
-                  placeholder="Enter amount"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+          type="number"
+          step="0.01"
+          required
+          placeholder="Enter amount"
         />
+      </div>
 
-        <FormField
-          control={form.control}
+      <div className="space-y-2">
+        <Label>Due Date</Label>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className={cn(
+                "w-full justify-start text-left font-normal",
+                !date && "text-muted-foreground"
+              )}
+            >
+              <CalendarIcon className="mr-2 h-4 w-4" />
+              {date ? format(date, "PPP") : <span>Pick a date</span>}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0">
+            <Calendar
+              mode="single"
+              selected={date}
+              onSelect={setDate}
+              initialFocus
+            />
+          </PopoverContent>
+        </Popover>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="description">Description</Label>
+        <Textarea
+          id="description"
           name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Description</FormLabel>
-              <FormControl>
-                <Input placeholder="Enter description" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+          placeholder="Enter invoice description"
+          className="min-h-[100px]"
         />
+      </div>
 
-        <FormItem>
-          <FormLabel>Due Date</FormLabel>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                className={cn(
-                  "w-full justify-start text-left font-normal",
-                  !date && "text-muted-foreground"
-                )}
-              >
-                <CalendarIcon className="mr-2 h-4 w-4" />
-                {date ? format(date, "PPP") : "Pick a date"}
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0">
-              <Calendar
-                mode="single"
-                selected={date}
-                onSelect={setDate}
-                initialFocus
-              />
-            </PopoverContent>
-          </Popover>
-        </FormItem>
-
-        <Button
-          type="submit"
-          className="w-full"
-          disabled={createInvoiceMutation.isPending}
-        >
-          Create Invoice
-        </Button>
-      </form>
-    </Form>
+      <Button type="submit" className="w-full" disabled={isSubmitting}>
+        {isSubmitting ? "Creating..." : "Create Invoice"}
+      </Button>
+    </form>
   )
 }
