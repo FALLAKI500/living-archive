@@ -46,7 +46,7 @@ export function InvoiceForm({ propertyId, tenantId, onSuccess }: InvoiceFormProp
         property_id: propertyId,
         tenant_id: tenantId,
         amount: parseFloat(values.amount),
-        due_date: date,
+        due_date: date ? format(date, 'yyyy-MM-dd') : undefined, // Format date as YYYY-MM-DD string
         description: values.description,
       })
       if (error) throw error
