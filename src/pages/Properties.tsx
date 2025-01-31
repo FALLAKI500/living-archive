@@ -1,40 +1,36 @@
 import { useState } from "react"
+import { useQuery } from "@tanstack/react-query"
+import { Layout } from "@/components/Layout"
+import { PropertyCard } from "@/components/PropertyCard"
+import { PropertyForm } from "@/components/PropertyForm"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Plus, Search, Edit, Trash, MapPin, Image } from "lucide-react"
-
-// Temporary mock data - will be replaced with Supabase data
-const mockProperties = [
-  {
-    id: 1,
-    name: "Luxury Villa",
-    location: "Beachfront",
-    price: 2500,
-    status: "Available",
-    imageUrl: "https://images.unsplash.com/photo-1487958449943-2429e8be8625",
-  },
-  {
-    id: 2,
-    name: "Modern Apartment",
-    location: "Downtown",
-    price: 1500,
-    status: "Rented",
-    imageUrl: "https://images.unsplash.com/photo-1721322800607-8c38375eef04",
-  },
-]
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Plus, Search } from "lucide-react"
+import { supabase } from "@/integrations/supabase/client"
+import type { Property } from "@/types/property"
 
 export default function Properties() {
   const [searchTerm, setSearchTerm] = useState("")
-  const [properties, setProperties] = useState(mockProperties)
+
+  const { data: properties = [], isLoading } = useQuery({
+    queryKey: ["properties"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("properties")
+        .select("*")
+        .order("created_at", { ascending: false })
+
+      if (error) throw error
+      return data as Property[]
+    },
+  })
 
   const filteredProperties = properties.filter(
     (property) =>
@@ -43,73 +39,48 @@ export default function Properties() {
   )
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">Properties</h1>
-        <Button>
-          <Plus className="mr-2 h-4 w-4" />
-          Add Property
-        </Button>
-      </div>
-
-      <div className="flex items-center space-x-2">
-        <div className="relative flex-1">
-          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search properties..."
-            className="pl-8"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+    <Layout>
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold tracking-tight">Properties</h1>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button>
+                <Plus className="mr-2 h-4 w-4" />
+                Add Property
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Add New Property</DialogTitle>
+              </DialogHeader>
+              <PropertyForm />
+            </DialogContent>
+          </Dialog>
         </div>
-      </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {filteredProperties.map((property) => (
-          <Card key={property.id}>
-            <div className="relative aspect-video">
-              <img
-                src={property.imageUrl}
-                alt={property.name}
-                className="absolute inset-0 h-full w-full object-cover rounded-t-lg"
-              />
-            </div>
-            <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span>{property.name}</span>
-                <span
-                  className={`text-sm px-2 py-1 rounded-full ${
-                    property.status === "Available"
-                      ? "bg-success/15 text-success"
-                      : "bg-warning/15 text-warning"
-                  }`}
-                >
-                  {property.status}
-                </span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center text-muted-foreground">
-                  <MapPin className="mr-2 h-4 w-4" />
-                  {property.location}
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-2xl font-bold">${property.price}</span>
-                  <div className="space-x-2">
-                    <Button variant="outline" size="icon">
-                      <Edit className="h-4 w-4" />
-                    </Button>
-                    <Button variant="outline" size="icon">
-                      <Trash className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+        <div className="flex items-center space-x-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search properties..."
+              className="pl-8"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+        </div>
+
+        {isLoading ? (
+          <div>Loading properties...</div>
+        ) : (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {filteredProperties.map((property) => (
+              <PropertyCard key={property.id} property={property} />
+            ))}
+          </div>
+        )}
       </div>
-    </div>
+    </Layout>
   )
 }
