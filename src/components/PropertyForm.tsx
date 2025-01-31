@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/select"
 import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
+import { useAuth } from "@/contexts/AuthContext"
 import type { Property, CreatePropertyInput } from "@/types/property"
 
 interface PropertyFormProps {
@@ -29,6 +30,7 @@ interface PropertyFormProps {
 export function PropertyForm({ property }: PropertyFormProps) {
   const [isLoading, setIsLoading] = useState(false)
   const queryClient = useQueryClient()
+  const { user } = useAuth()
 
   const form = useForm<CreatePropertyInput>({
     defaultValues: {
@@ -42,7 +44,9 @@ export function PropertyForm({ property }: PropertyFormProps) {
 
   const mutation = useMutation({
     mutationFn: async (values: CreatePropertyInput) => {
+      if (!user) throw new Error("User must be logged in")
       setIsLoading(true)
+      
       if (property) {
         const { error } = await supabase
           .from("properties")
@@ -50,7 +54,9 @@ export function PropertyForm({ property }: PropertyFormProps) {
           .eq("id", property.id)
         if (error) throw error
       } else {
-        const { error } = await supabase.from("properties").insert([values])
+        const { error } = await supabase
+          .from("properties")
+          .insert([{ ...values, user_id: user.id }])
         if (error) throw error
       }
     },
