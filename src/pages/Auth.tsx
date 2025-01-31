@@ -7,26 +7,26 @@ import { useToast } from "@/components/ui/use-toast";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { signUpUser } from "@/integrations/supabase/client";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Loader2 } from "lucide-react";
 
 export default function Auth() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { signIn } = useAuth();
   const { toast } = useToast();
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     try {
       setLoading(true);
       await signIn(email, password);
     } catch (error) {
       console.error("Sign in error:", error);
-      toast({
-        variant: "destructive",
-        title: "Error signing in",
-        description: error instanceof Error ? error.message : "Invalid credentials. Please try signing up if you don't have an account.",
-      });
+      setError(error instanceof Error ? error.message : "Invalid credentials. Please try signing up if you don't have an account.");
     } finally {
       setLoading(false);
     }
@@ -34,6 +34,7 @@ export default function Auth() {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     try {
       setLoading(true);
       await signUpUser(email, password);
@@ -43,11 +44,7 @@ export default function Auth() {
       });
     } catch (error) {
       console.error("Sign up error:", error);
-      toast({
-        variant: "destructive",
-        title: "Error signing up",
-        description: error instanceof Error ? error.message : "Failed to sign up",
-      });
+      setError(error instanceof Error ? error.message : "Failed to sign up");
     } finally {
       setLoading(false);
     }
@@ -55,18 +52,24 @@ export default function Auth() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-md p-6">
+      <Card className="w-full max-w-md p-6 space-y-6">
         <Tabs defaultValue="signin" className="space-y-6">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="signin">Sign In</TabsTrigger>
             <TabsTrigger value="signup">Sign Up</TabsTrigger>
           </TabsList>
+
+          {error && (
+            <Alert variant="destructive" className="my-4">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
           
           <TabsContent value="signin" className="space-y-6">
             <div className="space-y-2 text-center">
               <h1 className="text-2xl font-bold">Welcome Back</h1>
               <p className="text-muted-foreground">
-                Sign in to access your rental management dashboard
+                Sign in to access your account
               </p>
             </div>
             <form onSubmit={handleSignIn} className="space-y-4">
@@ -97,7 +100,14 @@ export default function Auth() {
                 className="w-full"
                 disabled={loading}
               >
-                {loading ? "Signing in..." : "Sign In"}
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Signing in...
+                  </>
+                ) : (
+                  "Sign In"
+                )}
               </Button>
             </form>
           </TabsContent>
@@ -106,7 +116,7 @@ export default function Auth() {
             <div className="space-y-2 text-center">
               <h1 className="text-2xl font-bold">Create Account</h1>
               <p className="text-muted-foreground">
-                Sign up to start managing your rentals
+                Sign up to get started
               </p>
             </div>
             <form onSubmit={handleSignUp} className="space-y-4">
@@ -137,7 +147,14 @@ export default function Auth() {
                 className="w-full"
                 disabled={loading}
               >
-                {loading ? "Signing up..." : "Sign Up"}
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Signing up...
+                  </>
+                ) : (
+                  "Sign Up"
+                )}
               </Button>
             </form>
           </TabsContent>
