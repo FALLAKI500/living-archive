@@ -12,7 +12,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Plus, Search } from "lucide-react"
+import { Plus, Search, Loader2 } from "lucide-react"
 import { supabase } from "@/integrations/supabase/client"
 import type { Property } from "@/types/property"
 
@@ -46,7 +46,6 @@ export default function Properties() {
           table: 'properties'
         },
         () => {
-          // Invalidate and refetch properties when changes occur
           queryClient.invalidateQueries({ queryKey: ["properties"] })
         }
       )
@@ -70,6 +69,19 @@ export default function Properties() {
 
     return matchesSearch && matchesPrice && matchesStatus
   })
+
+  if (isLoading) {
+    return (
+      <Layout>
+        <div className="min-h-[50vh] flex flex-col items-center justify-center space-y-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-lg font-medium text-muted-foreground animate-pulse">
+            Loading properties...
+          </p>
+        </div>
+      </Layout>
+    )
+  }
 
   return (
     <Layout>
@@ -127,15 +139,11 @@ export default function Properties() {
           </div>
         </div>
 
-        {isLoading ? (
-          <div>Loading properties...</div>
-        ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {filteredProperties.map((property) => (
-              <PropertyCard key={property.id} property={property} />
-            ))}
-          </div>
-        )}
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {filteredProperties.map((property) => (
+            <PropertyCard key={property.id} property={property} />
+          ))}
+        </div>
       </div>
     </Layout>
   )
