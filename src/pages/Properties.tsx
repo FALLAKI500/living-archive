@@ -86,11 +86,11 @@ export default function Properties() {
   return (
     <Layout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold tracking-tight">Properties</h1>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Properties</h1>
           <Dialog>
             <DialogTrigger asChild>
-              <Button>
+              <Button className="w-full sm:w-auto">
                 <Plus className="mr-2 h-4 w-4" />
                 Add Property
               </Button>
@@ -104,31 +104,31 @@ export default function Properties() {
           </Dialog>
         </div>
 
-        <div className="flex flex-col space-y-4 md:flex-row md:space-x-4 md:space-y-0">
-          <div className="relative flex-1">
+        <div className="flex flex-col space-y-4">
+          <div className="relative w-full">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Search properties..."
-              className="pl-8"
+              className="w-full pl-8"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <div className="flex space-x-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <Input
               type="number"
               placeholder="Min price"
-              className="w-24"
+              className="w-full sm:w-24"
               onChange={(e) => setPriceRange(prev => ({ ...prev, min: Number(e.target.value) || 0 }))}
             />
             <Input
               type="number"
               placeholder="Max price"
-              className="w-24"
+              className="w-full sm:w-24"
               onChange={(e) => setPriceRange(prev => ({ ...prev, max: Number(e.target.value) || Infinity }))}
             />
             <select
-              className="rounded-md border px-3"
+              className="w-full sm:w-auto rounded-md border px-3 py-2"
               value={selectedStatus}
               onChange={(e) => setSelectedStatus(e.target.value as "all" | "Available" | "Rented")}
             >
@@ -139,7 +139,7 @@ export default function Properties() {
           </div>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredProperties.map((property) => (
             <PropertyCard key={property.id} property={property} />
           ))}
