@@ -90,7 +90,8 @@ export function BookingForm() {
           end_date: format(endDate, 'yyyy-MM-dd'),
           daily_rate: dailyRate,
           amount: totalPrice,
-          status: "pending"
+          status: "pending",
+          due_date: format(startDate, 'yyyy-MM-dd') // Setting due date to start date
         }])
 
       if (bookingError) throw bookingError
