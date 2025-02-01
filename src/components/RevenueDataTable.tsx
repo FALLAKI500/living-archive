@@ -59,7 +59,7 @@ export function RevenueDataTable() {
               <TableRow>
                 <TableHead className="w-[50px]">#</TableHead>
                 <TableHead>Month</TableHead>
-                <TableHead>Total Revenue ($)</TableHead>
+                <TableHead>Total Revenue (MAD)</TableHead>
                 <TableHead>Total Payments</TableHead>
               </TableRow>
             </TableHeader>

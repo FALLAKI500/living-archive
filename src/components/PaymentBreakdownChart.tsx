@@ -97,7 +97,7 @@ export function PaymentBreakdownChart() {
                             />
                             <span>{data.name}</span>
                           </div>
-                          <div className="font-bold">${data.value.toLocaleString()}</div>
+                          <div className="font-bold">{data.value.toLocaleString()} MAD</div>
                         </div>
                       </ChartTooltipContent>
                     );
@@ -114,7 +114,7 @@ export function PaymentBreakdownChart() {
                   style={{ backgroundColor: entry.color }}
                 />
                 <span className="text-sm">
-                  {entry.name}: ${entry.value.toLocaleString()}
+                  {entry.name}: {entry.value.toLocaleString()} MAD
                 </span>
               </div>
             ))}
