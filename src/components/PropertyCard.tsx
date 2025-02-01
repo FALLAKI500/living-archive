@@ -23,6 +23,7 @@ interface PropertyCardProps {
 export function PropertyCard({ property }: PropertyCardProps) {
   const [isDeleteLoading, setIsDeleteLoading] = useState(false)
   const [isInvoiceDialogOpen, setIsInvoiceDialogOpen] = useState(false)
+  const [pricingType, setPricingType] = useState<"daily" | "monthly">(property.pricing_type || "monthly")
   const queryClient = useQueryClient()
 
   const deleteMutation = useMutation({
@@ -46,6 +47,10 @@ export function PropertyCard({ property }: PropertyCardProps) {
       setIsDeleteLoading(false)
     },
   })
+
+  const displayPrice = pricingType === "daily" 
+    ? property.daily_rate 
+    : (property.monthly_rate || property.daily_rate * 30)
 
   return (
     <Card>
@@ -76,49 +81,67 @@ export function PropertyCard({ property }: PropertyCardProps) {
             <MapPin className="mr-2 h-4 w-4" />
             {property.location}
           </div>
-          <div className="flex items-center justify-between">
-            <span className="text-2xl font-bold">
-              ${property.price.toLocaleString()}/month
-            </span>
-            <div className="space-x-2">
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button variant="outline" size="icon">
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Edit Property</DialogTitle>
-                  </DialogHeader>
-                  <PropertyForm property={property} />
-                </DialogContent>
-              </Dialog>
-              <Dialog open={isInvoiceDialogOpen} onOpenChange={setIsInvoiceDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="outline" size="icon">
-                    <Receipt className="h-4 w-4" />
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Create Invoice</DialogTitle>
-                  </DialogHeader>
-                  <AddInvoiceForm
-                    propertyId={property.id}
-                    tenantId="tenant-id" // This should be replaced with actual tenant ID
-                    onSuccess={() => setIsInvoiceDialogOpen(false)}
-                  />
-                </DialogContent>
-              </Dialog>
+          <div className="space-y-2">
+            <div className="flex gap-2">
               <Button
-                variant="outline"
-                size="icon"
-                onClick={() => deleteMutation.mutate()}
-                disabled={isDeleteLoading}
+                variant={pricingType === "daily" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setPricingType("daily")}
               >
-                <Trash className="h-4 w-4" />
+                Daily Rate
               </Button>
+              <Button
+                variant={pricingType === "monthly" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setPricingType("monthly")}
+              >
+                Monthly Rate
+              </Button>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-2xl font-bold">
+                ${displayPrice.toLocaleString()}/{pricingType === "daily" ? "day" : "month"}
+              </span>
+              <div className="space-x-2">
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="icon">
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Edit Property</DialogTitle>
+                    </DialogHeader>
+                    <PropertyForm property={property} />
+                  </DialogContent>
+                </Dialog>
+                <Dialog open={isInvoiceDialogOpen} onOpenChange={setIsInvoiceDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" size="icon">
+                      <Receipt className="h-4 w-4" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Create Invoice</DialogTitle>
+                    </DialogHeader>
+                    <AddInvoiceForm
+                      propertyId={property.id}
+                      tenantId="tenant-id" // This should be replaced with actual tenant ID
+                      onSuccess={() => setIsInvoiceDialogOpen(false)}
+                    />
+                  </DialogContent>
+                </Dialog>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => deleteMutation.mutate()}
+                  disabled={isDeleteLoading}
+                >
+                  <Trash className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
         </div>
