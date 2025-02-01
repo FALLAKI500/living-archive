@@ -119,7 +119,8 @@ export function AddInvoiceForm({ propertyId, tenantId, onSuccess }: AddInvoiceFo
           date={endDate}
           setDate={setEndDate}
           placeholder="Select end date"
-          fromDate={startDate}
+          disabled={!startDate}
+          minDate={startDate}
         />
       </div>
 
