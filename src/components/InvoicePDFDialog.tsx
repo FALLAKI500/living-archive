@@ -15,15 +15,15 @@ interface InvoicePDFDialogProps {
   invoice: {
     id: string;
     amount: number;
+    amount_paid: number;
     due_date: string;
-    description?: string;
-    property: {
+    status: "pending" | "paid" | "overdue" | "cancelled";
+    description: string;
+    properties: {
       name: string;
-      location: string;
     };
-    tenant: {
-      full_name: string;
-    };
+    daily_rate: number;
+    days_rented: number;
   };
 }
 
