@@ -59,10 +59,10 @@ export function MonthlyRevenueTrend({ startDate, endDate }: MonthlyRevenueTrendP
               <YAxis
                 stroke="#888888"
                 fontSize={12}
-                tickFormatter={(value) => `$${value}`}
+                tickFormatter={(value) => `${value} MAD`}
               />
               <Tooltip 
-                formatter={(value: number) => [`$${value.toLocaleString()}`, "Revenue"]}
+                formatter={(value: number) => [`${value.toLocaleString()} MAD`, "Revenue"]}
               />
               <Line
                 type="monotone"

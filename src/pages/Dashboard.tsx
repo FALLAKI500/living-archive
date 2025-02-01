@@ -115,7 +115,7 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                ${metrics?.totalPayments.toLocaleString()}
+                {metrics?.totalPayments.toLocaleString()} MAD
               </div>
               <p className="text-xs text-muted-foreground">Received payments</p>
             </CardContent>
@@ -128,7 +128,7 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                ${metrics?.pendingAmount.toLocaleString()}
+                {metrics?.pendingAmount.toLocaleString()} MAD
               </div>
               <p className="text-xs text-muted-foreground">Outstanding balance</p>
             </CardContent>
@@ -202,10 +202,10 @@ export default function Dashboard() {
                   </div>
                   <div className="text-right">
                     <p className="font-medium">
-                      ${property.total_billed.toLocaleString()}
+                      {property.total_billed.toLocaleString()} MAD
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      ${property.total_paid.toLocaleString()} paid
+                      {property.total_paid.toLocaleString()} MAD paid
                     </p>
                   </div>
                 </div>
