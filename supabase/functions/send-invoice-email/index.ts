@@ -9,7 +9,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-interface InvoiceEmailRequest {
+interface EmailRequest {
   customerName: string;
   invoiceId: string;
   amount: number;
@@ -24,24 +24,29 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { customerName, invoiceId, amount, dueDate, email }: InvoiceEmailRequest = await req.json();
+    const { customerName, invoiceId, amount, dueDate, email }: EmailRequest = await req.json();
 
-    console.log("Sending overdue invoice email to:", email);
+    console.log(`Sending overdue invoice email to ${email} for invoice ${invoiceId}`);
 
     const emailResponse = await resend.emails.send({
-      from: "Rental Manager <onboarding@resend.dev>",
+      from: "Invoicing System <onboarding@resend.dev>",
       to: [email],
-      subject: "Payment Reminder – Invoice Overdue",
+      subject: "Important: Invoice Payment Overdue",
       html: `
-        <h2>Payment Reminder</h2>
-        <p>Hello ${customerName},</p>
-        <p>This is a reminder that your invoice #${invoiceId.substring(0, 8)} is overdue.</p>
-        <div style="margin: 20px 0; padding: 15px; background-color: #f8f9fa; border-radius: 5px;">
-          <p><strong>Amount Due:</strong> $${amount.toLocaleString()}</p>
-          <p><strong>Due Date:</strong> ${new Date(dueDate).toLocaleDateString()}</p>
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h2 style="color: #e11d48;">Overdue Invoice Notice</h2>
+          <p>Dear ${customerName},</p>
+          <p>This is a reminder that the payment for invoice <strong>#${invoiceId}</strong> is now overdue.</p>
+          <div style="background-color: #f3f4f6; padding: 20px; border-radius: 8px; margin: 20px 0;">
+            <p style="margin: 0;"><strong>Invoice Details:</strong></p>
+            <p style="margin: 8px 0;">Amount Due: $${amount.toLocaleString()}</p>
+            <p style="margin: 8px 0;">Due Date: ${new Date(dueDate).toLocaleDateString()}</p>
+          </div>
+          <p>Please process this payment as soon as possible to avoid any additional fees or service interruptions.</p>
+          <p>If you have already made this payment, please disregard this notice and accept our thanks.</p>
+          <p>If you have any questions or concerns, please don't hesitate to contact us.</p>
+          <p style="margin-top: 30px;">Best regards,<br>Your Property Management Team</p>
         </div>
-        <p>Please make a payment as soon as possible.</p>
-        <p>Thank you,<br>Rental Manager</p>
       `,
     });
 
@@ -54,8 +59,8 @@ const handler = async (req: Request): Promise<Response> => {
         ...corsHeaders,
       },
     });
-  } catch (error: any) {
-    console.error("Error in send-invoice-email function:", error);
+  } catch (error) {
+    console.error("Error sending email:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
       {
