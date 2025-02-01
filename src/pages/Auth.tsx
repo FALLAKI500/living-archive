@@ -1,80 +1,89 @@
-import { useState } from "react"
-import { useForm } from "react-hook-form"
+import { useEffect } from "react"
+import { useNavigate } from "react-router-dom"
 import { useAuth } from "@/contexts/AuthContext"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { toast } from "sonner"
 import { supabase } from "@/integrations/supabase/client"
-import type { Property } from "@/types/property"
-
-interface AuthFormData {
-  email: string
-  password: string
-}
+import { toast } from "sonner"
 
 const testProperties = [
   {
     name: "Résidence Al Azhari",
     location: "Casablanca",
-    price: 665,
-    status: "Available" as const,
-    image_url: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267"
+    daily_rate: 549, // Calculated from monthly rate
+    monthly_rate: 16470,
+    pricing_type: "monthly",
+    status: "Rented",
+    image_url: "https://plan-a.ca/wp-content/uploads/2022/12/4800_paul_pouliot_30207_web-scaled.jpg"
   },
   {
     name: "Villa Bahia",
     location: "Marrakech",
-    price: 1101,
-    status: "Available" as const,
-    image_url: "https://images.unsplash.com/photo-1574362848149-11496d93a7c7"
+    daily_rate: 640,
+    monthly_rate: 19200, // Calculated from daily rate
+    pricing_type: "daily",
+    status: "Available",
+    image_url: "https://stayhere.ma/wp-content/uploads/2022/08/Agdir_stayhere_1_024_220723_%C2%A9HARDLIGHT-scaled.jpg"
   },
   {
     name: "Appartement Zaytouna",
     location: "Tanger",
-    price: 749,
-    status: "Rented" as const,
-    image_url: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688"
+    daily_rate: 1059,
+    monthly_rate: 31770,
+    pricing_type: "daily",
+    status: "Available",
+    image_url: "https://concretise.ch/wp-content/uploads/2022/03/adobestock-329752349-1024x683.jpeg"
+  },
+  {
+    name: "Dar Al Noor",
+    location: "Fès",
+    daily_rate: 480,
+    monthly_rate: 14400,
+    pricing_type: "daily",
+    status: "Available",
+    image_url: "https://www.toulouseimmo9.com/medias/64a52a34988b2-1920.jpg"
+  },
+  {
+    name: "Résidence Saada",
+    location: "Rabat",
+    daily_rate: 1022,
+    monthly_rate: 30660,
+    pricing_type: "daily",
+    status: "Available",
+    image_url: "https://www.toulouseimmo9.com/medias/60a2379023649-1200.jpg"
   }
-]
-
-const insertTestData = async (userId: string) => {
-  const propertiesWithUserId = testProperties.map(property => ({
-    ...property,
-    user_id: userId
-  }))
-
-  const { data, error } = await supabase
-    .from("properties")
-    .insert(propertiesWithUserId)
-    .select()
-
-  if (error) {
-    console.error("Error inserting data:", error)
-    toast.error("Failed to insert test data")
-  } else {
-    console.log("Data inserted successfully:", data)
-    toast.success("Test properties added successfully")
-  }
-}
+] as const
 
 export default function Auth() {
-  const [isLoading, setIsLoading] = useState(false)
-  const { signIn } = useAuth()
-  const { register, handleSubmit } = useForm<AuthFormData>()
+  const navigate = useNavigate()
+  const { user } = useAuth()
 
-  const onSubmit = async (data: AuthFormData) => {
+  useEffect(() => {
+    if (user) {
+      navigate("/")
+    }
+  }, [user, navigate])
+
+  const insertTestData = async () => {
+    if (!user) {
+      toast.error("Please login first")
+      return
+    }
+
     try {
-      setIsLoading(true)
-      await signIn(data.email, data.password)
-      
-      // After successful sign in, get the user and insert test data
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        await insertTestData(user.id)
-      }
+      const propertiesToInsert = testProperties.map(property => ({
+        ...property,
+        user_id: user.id
+      }))
+
+      const { error } = await supabase
+        .from("properties")
+        .insert(propertiesToInsert)
+
+      if (error) throw error
+
+      toast.success("Test properties inserted successfully")
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to sign in")
-    } finally {
-      setIsLoading(false)
+      console.error("Error inserting test data:", error)
+      toast.error("Failed to insert test properties")
     }
   }
 
@@ -83,40 +92,52 @@ export default function Auth() {
       <div className="relative hidden h-full flex-col bg-muted p-10 text-white lg:flex dark:border-r">
         <div className="absolute inset-0 bg-zinc-900" />
         <div className="relative z-20 flex items-center text-lg font-medium">
-          Property Management System
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="mr-2 h-6 w-6"
+          >
+            <path d="M15 6v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3" />
+          </svg>
+          Rental Manager Pro
+        </div>
+        <div className="relative z-20 mt-auto">
+          <blockquote className="space-y-2">
+            <p className="text-lg">
+              Streamline your property management with our intuitive platform.
+            </p>
+          </blockquote>
         </div>
       </div>
       <div className="lg:p-8">
         <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
           <div className="flex flex-col space-y-2 text-center">
             <h1 className="text-2xl font-semibold tracking-tight">
-              Sign in to your account
+              Welcome back
             </h1>
             <p className="text-sm text-muted-foreground">
-              Enter your email and password to access your dashboard
+              Enter your email below to create your account or sign in
             </p>
           </div>
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-            <div>
-              <Input
-                type="email"
-                placeholder="Email"
-                {...register("email")}
-                required
-              />
-            </div>
-            <div>
-              <Input
-                type="password"
-                placeholder="Password"
-                {...register("password")}
-                required
-              />
-            </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "Signing in..." : "Sign In"}
-            </Button>
-          </form>
+          <div className="grid gap-6">
+            <form action="/auth/sign-in" method="POST">
+              <div className="grid gap-2">
+                <div className="grid gap-1">
+                  <button
+                    onClick={insertTestData}
+                    className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border border-input bg-background hover:bg-accent hover:text-accent-foreground h-10 px-4 py-2"
+                  >
+                    Insert Test Properties
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
         </div>
       </div>
     </div>
