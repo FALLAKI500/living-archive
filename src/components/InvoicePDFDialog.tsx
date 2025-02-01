@@ -47,13 +47,11 @@ export function InvoicePDFDialog({ invoice }: InvoicePDFDialogProps) {
             document={<InvoicePDF invoice={invoice} />}
             fileName={`invoice-${invoice.id.slice(0, 8)}.pdf`}
           >
-            {({ loading }) => {
-              return (
-                <Button className="w-full" disabled={loading} type="button">
-                  {loading ? "Preparing..." : "Download PDF"}
-                </Button>
-              )
-            }}
+            {({ loading, error }: { loading: boolean; error: Error | null }) => (
+              <Button className="w-full" disabled={loading} type="button">
+                {loading ? "Preparing..." : error ? "Error generating PDF" : "Download PDF"}
+              </Button>
+            )}
           </PDFDownloadLink>
         </div>
       </DialogContent>
