@@ -16,8 +16,10 @@ export default function Dashboard() {
   const [endDate, setEndDate] = useState<Date>(new Date());
 
   const { data: metrics, isLoading: metricsLoading } = useQuery({
-    queryKey: ["dashboard-metrics", startDate, endDate],
+    queryKey: ["dashboard-metrics", startDate?.toISOString(), endDate?.toISOString()],
     queryFn: async () => {
+      if (!startDate || !endDate) return null;
+
       // Get total payments received
       const { data: payments, error: paymentsError } = await supabase
         .from("payments")
@@ -25,14 +27,20 @@ export default function Dashboard() {
         .gte("payment_date", startDate.toISOString())
         .lte("payment_date", endDate.toISOString());
 
-      if (paymentsError) throw paymentsError;
+      if (paymentsError) {
+        console.error("Payments query error:", paymentsError);
+        throw paymentsError;
+      }
 
       // Get pending and overdue invoices
       const { data: invoices, error: invoicesError } = await supabase
         .from("invoices")
         .select("amount, amount_paid, status, due_date");
 
-      if (invoicesError) throw invoicesError;
+      if (invoicesError) {
+        console.error("Invoices query error:", invoicesError);
+        throw invoicesError;
+      }
 
       const totalPayments = payments?.reduce((sum, p) => sum + Number(p.amount || 0), 0) || 0;
       const pendingAmount = invoices
