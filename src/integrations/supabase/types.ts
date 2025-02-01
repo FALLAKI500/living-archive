@@ -9,6 +9,44 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      email_logs: {
+        Row: {
+          email_type: string
+          error_message: string | null
+          id: string
+          invoice_id: string | null
+          recipient_email: string
+          sent_at: string | null
+          success: boolean
+        }
+        Insert: {
+          email_type: string
+          error_message?: string | null
+          id?: string
+          invoice_id?: string | null
+          recipient_email: string
+          sent_at?: string | null
+          success: boolean
+        }
+        Update: {
+          email_type?: string
+          error_message?: string | null
+          id?: string
+          invoice_id?: string | null
+          recipient_email?: string
+          sent_at?: string | null
+          success?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_logs_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       invoices: {
         Row: {
           amount: number
