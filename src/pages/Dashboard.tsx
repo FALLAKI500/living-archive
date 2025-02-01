@@ -2,12 +2,11 @@ import { useQuery } from "@tanstack/react-query";
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer } from "recharts";
 import { AlertOctagon, Calendar, DollarSign } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { format, startOfMonth, endOfMonth, addMonths } from "date-fns";
 import { PaymentBreakdownChart } from "@/components/PaymentBreakdownChart";
+import { RevenueDataTable } from "@/components/RevenueDataTable";
 
 interface DashboardMetrics {
   totalPayments: number;
@@ -235,6 +234,8 @@ export default function Dashboard() {
 
           <PaymentBreakdownChart />
         </div>
+
+        <RevenueDataTable />
       </div>
     </Layout>
   );
