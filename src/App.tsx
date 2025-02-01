@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"
 import { AuthProvider, useAuth } from "@/contexts/AuthContext"
+import { useEffect } from "react"
 import Index from "./pages/Index"
 import Auth from "./pages/Auth"
 import Dashboard from "./pages/Dashboard"
@@ -33,6 +34,13 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 function AppRoutes() {
   const { user } = useAuth()
+
+  // Initialize theme from localStorage or system preference
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("theme") || "light"
+    document.documentElement.classList.remove("light", "dark")
+    document.documentElement.classList.add(savedTheme)
+  }, [])
 
   return (
     <Routes>
