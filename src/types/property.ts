@@ -13,7 +13,7 @@ export interface Property {
   created_at: string
   updated_at: string
   user_id: string
-  pricing_type: PricingType | null
+  pricing_type: PricingType
   num_bedrooms?: number | null
 }
 
