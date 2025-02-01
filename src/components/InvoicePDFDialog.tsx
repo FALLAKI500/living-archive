@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { PDFDownloadLink, PDFDownloadLinkProps } from "@react-pdf/renderer"
+import { PDFDownloadLink } from "@react-pdf/renderer"
 import { Button } from "@/components/ui/button"
 import { FileDown } from "lucide-react"
 import { InvoicePDF } from "./InvoicePDF"
@@ -47,11 +47,13 @@ export function InvoicePDFDialog({ invoice }: InvoicePDFDialogProps) {
             document={<InvoicePDF invoice={invoice} />}
             fileName={`invoice-${invoice.id.slice(0, 8)}.pdf`}
           >
-            {({ blob, url, loading, error }) => (
-              <Button className="w-full" disabled={loading} type="button">
-                {loading ? "Preparing..." : "Download PDF"}
-              </Button>
-            )}
+            {({ loading }) => {
+              return (
+                <Button className="w-full" disabled={loading} type="button">
+                  {loading ? "Preparing..." : "Download PDF"}
+                </Button>
+              )
+            }}
           </PDFDownloadLink>
         </div>
       </DialogContent>
