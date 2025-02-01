@@ -17,7 +17,6 @@ interface DashboardMetrics {
 }
 
 export default function Dashboard() {
-  // Fetch dashboard metrics
   const { data: metrics, isLoading: metricsLoading } = useQuery({
     queryKey: ["dashboard-metrics"],
     queryFn: async () => {
