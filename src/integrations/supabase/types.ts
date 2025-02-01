@@ -47,6 +47,57 @@ export type Database = {
           },
         ]
       }
+      expenses: {
+        Row: {
+          amount: number
+          category: Database["public"]["Enums"]["expense_category"]
+          created_at: string | null
+          date: string
+          description: string | null
+          id: string
+          property_id: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          amount: number
+          category: Database["public"]["Enums"]["expense_category"]
+          created_at?: string | null
+          date?: string
+          description?: string | null
+          id?: string
+          property_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          amount?: number
+          category?: Database["public"]["Enums"]["expense_category"]
+          created_at?: string | null
+          date?: string
+          description?: string | null
+          id?: string
+          property_id?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expenses_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "expenses_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "property_revenue_summary"
+            referencedColumns: ["property_id"]
+          },
+        ]
+      }
       invoices: {
         Row: {
           amount: number
@@ -294,6 +345,13 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      expense_category:
+        | "maintenance"
+        | "utilities"
+        | "insurance"
+        | "taxes"
+        | "mortgage"
+        | "other"
       invoice_status: "pending" | "paid" | "overdue" | "cancelled"
       property_status: "Available" | "Rented"
     }

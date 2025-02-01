@@ -142,17 +142,18 @@ export function BookingForm() {
           </Select>
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-2 relative z-50">
           <label className="text-sm font-medium">Start Date</label>
           <DatePicker
             date={startDate}
             setDate={setStartDate}
             placeholder="Select start date"
             disabled={!selectedProperty}
+            className="pointer-events-auto"
           />
         </div>
 
-        <div className="space-y-2">
+        <div className="space-y-2 relative z-40">
           <label className="text-sm font-medium">End Date</label>
           <DatePicker
             date={endDate}
@@ -160,6 +161,7 @@ export function BookingForm() {
             placeholder="Select end date"
             disabled={!startDate}
             minDate={startDate}
+            className="pointer-events-auto"
           />
         </div>
 
