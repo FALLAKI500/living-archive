@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { signUpUser } from "@/integrations/supabase/client";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Mail, Lock, AlertCircle } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Auth() {
   const [email, setEmail] = useState("");
@@ -17,6 +18,50 @@ export default function Auth() {
   const [error, setError] = useState<string | null>(null);
   const { signIn } = useAuth();
   const { toast } = useToast();
+
+  // Add test function for overdue invoice
+  const testOverdueEmail = async () => {
+    try {
+      setLoading(true);
+      // Get the first invoice to test with
+      const { data: invoice, error: fetchError } = await supabase
+        .from('invoices')
+        .select('*')
+        .limit(1)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      if (!invoice) {
+        toast({
+          title: "No invoice found",
+          description: "Please create an invoice first",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Update the invoice status to trigger the email
+      const { error: updateError } = await supabase
+        .from('invoices')
+        .update({ status: 'overdue' })
+        .eq('id', invoice.id);
+
+      if (updateError) throw updateError;
+
+      toast({
+        title: "Test initiated",
+        description: "Check the email logs table for results",
+      });
+
+      console.log("Test completed - Invoice ID:", invoice.id);
+    } catch (error) {
+      console.error("Test error:", error);
+      setError(error instanceof Error ? error.message : "Failed to run test");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const validateForm = () => {
     if (!email || !password) {
@@ -169,6 +214,23 @@ export default function Auth() {
 
             <TabsContent value="signin">
               {renderForm("signin")}
+              <div className="mt-4">
+                <Button
+                  variant="outline"
+                  onClick={testOverdueEmail}
+                  disabled={loading}
+                  className="w-full"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Testing...
+                    </>
+                  ) : (
+                    "Test Overdue Email"
+                  )}
+                </Button>
+              </div>
             </TabsContent>
 
             <TabsContent value="signup">
