@@ -3,7 +3,9 @@ import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface Booking {
   id: string;
@@ -20,10 +22,15 @@ interface Booking {
 }
 
 export default function Bookings() {
+  const { user } = useAuth();
+
   const { data: bookings, isLoading, error } = useQuery<Booking[]>({
-    queryKey: ["bookings"],
+    queryKey: ["bookings", user?.id],
     queryFn: async () => {
       console.log("Fetching bookings data...");
+      
+      if (!user) throw new Error("User not authenticated");
+
       const { data, error } = await supabase
         .from("invoices")
         .select(`
@@ -39,6 +46,7 @@ export default function Bookings() {
             address
           )
         `)
+        .or(`tenant_id.eq.${user.id},properties.user_id.eq.${user.id}`)
         .order("start_date", { ascending: false });
 
       if (error) {
@@ -66,9 +74,12 @@ export default function Bookings() {
     return (
       <Layout>
         <div className="min-h-[50vh] flex items-center justify-center">
-          <p className="text-lg text-destructive">
-            Error loading bookings. Please try again later.
-          </p>
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>
+              Error loading bookings. Please try again later.
+            </AlertDescription>
+          </Alert>
         </div>
       </Layout>
     );
