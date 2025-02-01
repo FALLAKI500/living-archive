@@ -7,6 +7,7 @@ import { PaymentDialog } from "@/components/PaymentDialog"
 import { InvoicePDFDialog } from "@/components/InvoicePDFDialog"
 import { Input } from "@/components/ui/input"
 import { DatePicker } from "@/components/ui/date-picker"
+import { exportInvoicesToExcel } from "@/utils/excelExport"
 import {
   Select,
   SelectContent,
@@ -29,7 +30,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Plus, Loader2, Search, Check, Clock, AlertCircle } from "lucide-react"
+import { Plus, Loader2, Search, Check, Clock, AlertCircle, FileSpreadsheet } from "lucide-react"
 import { supabase } from "@/integrations/supabase/client"
 import { format, isAfter } from "date-fns"
 import { Badge } from "@/components/ui/badge"
@@ -144,6 +145,16 @@ export default function Invoices() {
 
   const overdueCount = invoices.filter(inv => inv.status === "overdue").length
 
+  const handleExportToExcel = () => {
+    try {
+      exportInvoicesToExcel(filteredInvoices);
+      toast.success("Invoices exported successfully");
+    } catch (error) {
+      console.error("Export error:", error);
+      toast.error("Failed to export invoices");
+    }
+  };
+
   if (isLoading) {
     return (
       <Layout>
@@ -170,24 +181,34 @@ export default function Invoices() {
               </p>
             )}
           </div>
-          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Create Invoice
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Create New Invoice</DialogTitle>
-              </DialogHeader>
-              <InvoiceForm
-                propertyId="your-property-id"
-                tenantId="tenant-id"
-                onSuccess={() => setIsDialogOpen(false)}
-              />
-            </DialogContent>
-          </Dialog>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={handleExportToExcel}
+              className="flex items-center gap-2"
+            >
+              <FileSpreadsheet className="h-4 w-4" />
+              Export to Excel
+            </Button>
+            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+              <DialogTrigger asChild>
+                <Button>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create Invoice
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Create New Invoice</DialogTitle>
+                </DialogHeader>
+                <InvoiceForm
+                  propertyId="your-property-id"
+                  tenantId="tenant-id"
+                  onSuccess={() => setIsDialogOpen(false)}
+                />
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
 
         <div className="flex flex-col md:flex-row gap-4">

@@ -45,9 +45,9 @@ export function InvoicePDFDialog({ invoice }: InvoicePDFDialogProps) {
             document={<InvoicePDF invoice={invoice} />}
             fileName={`invoice-${invoice.id}.pdf`}
           >
-            {({ loading }: { loading: boolean }) => (
-              <Button disabled={loading}>
-                {loading ? "Generating PDF..." : "Download PDF"}
+            {(props: { loading: boolean }) => (
+              <Button disabled={props.loading}>
+                {props.loading ? "Generating PDF..." : "Download PDF"}
               </Button>
             )}
           </PDFDownloadLink>
