@@ -68,6 +68,38 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          created_at: string | null
+          id: string
+          invoice_id: string | null
+          message: string
+          status: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          invoice_id?: string | null
+          message: string
+          status?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          invoice_id?: string | null
+          message?: string
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payments: {
         Row: {
           amount: number
