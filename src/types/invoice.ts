@@ -13,8 +13,8 @@ export interface Invoice {
   updated_at: string
   daily_rate: number
   days_rented: number
-  start_date?: string
-  end_date?: string
+  start_date?: string | null
+  end_date?: string | null
   properties: {
     name: string
   }

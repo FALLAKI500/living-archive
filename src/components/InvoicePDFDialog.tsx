@@ -29,13 +29,13 @@ export function InvoicePDFDialog({ invoice }: InvoicePDFDialogProps) {
           document={<InvoicePDF invoice={invoiceWithDefaults} />}
           fileName={`invoice-${invoice.id}.pdf`}
         >
-          {({ loading }: { loading: boolean }) => 
+          {({ loading }) => (
             loading ? (
               <Button disabled>Generating PDF...</Button>
             ) : (
               <Button>Download PDF</Button>
             )
-          }
+          )}
         </PDFDownloadLink>
       </DialogContent>
     </Dialog>

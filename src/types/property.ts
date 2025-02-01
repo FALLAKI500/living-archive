@@ -5,16 +5,16 @@ export interface Property {
   id: string
   name: string
   address: string
-  city?: string
+  city?: string | null
   daily_rate: number
-  monthly_rate?: number
+  monthly_rate?: number | null
   status: PropertyStatus
-  image_url?: string
+  image_url?: string | null
   created_at: string
   updated_at: string
   user_id: string
-  pricing_type?: PricingType
-  num_bedrooms?: number
+  pricing_type?: PricingType | null
+  num_bedrooms?: number | null
 }
 
 export type CreatePropertyInput = Omit<Property, "id" | "created_at" | "updated_at">
