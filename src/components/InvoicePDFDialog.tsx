@@ -9,13 +9,13 @@ import {
 } from "@/components/ui/dialog"
 import { PDFDownloadLink } from "@react-pdf/renderer"
 import { Invoice } from "@/types/invoice"
-import InvoicePDF from "./InvoicePDF"
+import { InvoicePDF } from "./InvoicePDF"
 
 interface InvoicePDFDialogProps {
   invoice: Invoice
 }
 
-export default function InvoicePDFDialog({ invoice }: InvoicePDFDialogProps) {
+export function InvoicePDFDialog({ invoice }: InvoicePDFDialogProps) {
   return (
     <Dialog>
       <DialogTrigger asChild>

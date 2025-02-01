@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button"
 import { supabase } from "@/integrations/supabase/client"
 import { useAuth } from "@/contexts/AuthContext"
 import { toast } from "sonner"
+import { PropertyStatus } from "@/types/property"
 
 export function TestDataInserter() {
   const [isLoading, setIsLoading] = useState(false)
@@ -16,9 +17,10 @@ export function TestDataInserter() {
       daily_rate: 549,
       monthly_rate: 16470,
       num_bedrooms: 3,
-      status: "Rented",
+      status: "Rented" as PropertyStatus,
       image_url: "https://plan-a.ca/wp-content/uploads/2022/12/4800_paul_pouliot_30207_web-scaled.jpg",
-      user_id: user?.id
+      user_id: user?.id,
+      pricing_type: "monthly" as const
     },
     {
       name: "Villa Bahia",
@@ -27,9 +29,10 @@ export function TestDataInserter() {
       daily_rate: 640,
       monthly_rate: 19200,
       num_bedrooms: 3,
-      status: "Available",
+      status: "Available" as PropertyStatus,
       image_url: "https://stayhere.ma/wp-content/uploads/2022/08/Agdir_stayhere_1_024_220723_%C2%A9HARDLIGHT-scaled.jpg",
-      user_id: user?.id
+      user_id: user?.id,
+      pricing_type: "monthly" as const
     },
     {
       name: "Appartement Zaytouna",
