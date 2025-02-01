@@ -24,6 +24,9 @@ export function PaymentDialog({ invoiceId, currentAmount, amountPaid, onSuccess 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const { toast } = useToast()
 
+  const remainingAmount = currentAmount - amountPaid
+  const isFullyPaid = amountPaid >= currentAmount
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsSubmitting(true)
@@ -32,6 +35,14 @@ export function PaymentDialog({ invoiceId, currentAmount, amountPaid, onSuccess 
       const formData = new FormData(e.currentTarget)
       const amount = parseFloat(formData.get("amount") as string)
       const notes = formData.get("notes") as string
+
+      if (amount <= 0) {
+        throw new Error("Payment amount must be greater than 0")
+      }
+
+      if (amount > remainingAmount) {
+        throw new Error(`Payment amount cannot exceed the remaining balance of $${remainingAmount}`)
+      }
 
       // Create payment record
       const { error: paymentError } = await supabase
@@ -71,7 +82,7 @@ export function PaymentDialog({ invoiceId, currentAmount, amountPaid, onSuccess 
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to record payment. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to record payment",
       })
     } finally {
       setIsSubmitting(false)
@@ -81,7 +92,12 @@ export function PaymentDialog({ invoiceId, currentAmount, amountPaid, onSuccess 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline">Record Payment</Button>
+        <Button 
+          variant={isFullyPaid ? "ghost" : "outline"}
+          disabled={isFullyPaid}
+        >
+          {isFullyPaid ? "Fully Paid" : "Record Payment"}
+        </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
@@ -96,7 +112,9 @@ export function PaymentDialog({ invoiceId, currentAmount, amountPaid, onSuccess 
               type="number"
               step="0.01"
               required
-              placeholder="Enter payment amount"
+              min="0.01"
+              max={remainingAmount}
+              placeholder={`Enter amount (max: $${remainingAmount})`}
             />
           </div>
           <div className="space-y-2">
@@ -107,12 +125,12 @@ export function PaymentDialog({ invoiceId, currentAmount, amountPaid, onSuccess 
               placeholder="Payment notes (optional)"
             />
           </div>
-          <div className="text-sm text-muted-foreground">
-            <p>Invoice Total: ${currentAmount}</p>
-            <p>Amount Paid: ${amountPaid}</p>
-            <p>Remaining: ${currentAmount - amountPaid}</p>
+          <div className="space-y-1 text-sm text-muted-foreground">
+            <p>Invoice Total: ${currentAmount.toLocaleString()}</p>
+            <p>Amount Paid: ${amountPaid.toLocaleString()}</p>
+            <p>Remaining: ${remainingAmount.toLocaleString()}</p>
           </div>
-          <Button type="submit" className="w-full" disabled={isSubmitting}>
+          <Button type="submit" className="w-full" disabled={isSubmitting || isFullyPaid}>
             {isSubmitting ? "Recording..." : "Record Payment"}
           </Button>
         </form>
