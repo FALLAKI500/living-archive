@@ -49,7 +49,7 @@ export function InvoicePDFDialog({ invoice }: InvoicePDFDialogProps) {
             document={<InvoicePDF invoice={invoice} />}
             fileName={`invoice-${invoice.id}.pdf`}
           >
-            {({ loading, error }) => (
+            {({ loading, error }: { loading: boolean; error: boolean }) => (
               <Button disabled={loading || error} type="button">
                 {loading ? "Generating PDF..." : error ? "Error" : "Download Now"}
               </Button>
