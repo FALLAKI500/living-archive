@@ -44,6 +44,7 @@ export function InvoicePDFDialog({ invoice }: InvoicePDFDialogProps) {
           <PDFDownloadLink
             document={<InvoicePDF invoice={invoice} />}
             fileName={`invoice-${invoice.id}.pdf`}
+            className="inline-flex"
           >
             {({ loading }) => (
               <Button disabled={loading}>
