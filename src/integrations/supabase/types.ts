@@ -221,39 +221,45 @@ export type Database = {
       }
       properties: {
         Row: {
+          address: string
+          city: string | null
           created_at: string
           daily_rate: number
           id: string
           image_url: string | null
-          location: string
           monthly_rate: number | null
           name: string
+          num_bedrooms: number | null
           pricing_type: string | null
           status: Database["public"]["Enums"]["property_status"]
           updated_at: string
           user_id: string
         }
         Insert: {
+          address: string
+          city?: string | null
           created_at?: string
           daily_rate: number
           id?: string
           image_url?: string | null
-          location: string
           monthly_rate?: number | null
           name: string
+          num_bedrooms?: number | null
           pricing_type?: string | null
           status?: Database["public"]["Enums"]["property_status"]
           updated_at?: string
           user_id: string
         }
         Update: {
+          address?: string
+          city?: string | null
           created_at?: string
           daily_rate?: number
           id?: string
           image_url?: string | null
-          location?: string
           monthly_rate?: number | null
           name?: string
+          num_bedrooms?: number | null
           pricing_type?: string | null
           status?: Database["public"]["Enums"]["property_status"]
           updated_at?: string

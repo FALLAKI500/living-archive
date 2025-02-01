@@ -1,146 +1,112 @@
-import { useEffect } from "react"
+import { useState } from "react"
 import { useNavigate } from "react-router-dom"
-import { useAuth } from "@/contexts/AuthContext"
-import { supabase } from "@/integrations/supabase/client"
-import { toast } from "sonner"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import * as z from "zod"
 import { Button } from "@/components/ui/button"
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { signInUser, signUpUser } from "@/integrations/supabase/client"
+import { toast } from "sonner"
+import { TestDataInserter } from "@/components/TestDataInserter"
 
-const testProperties = [
-  {
-    name: "Résidence Al Azhari",
-    location: "Casablanca",
-    daily_rate: 549,
-    monthly_rate: 16470,
-    pricing_type: "monthly",
-    status: "Rented",
-    image_url: "https://plan-a.ca/wp-content/uploads/2022/12/4800_paul_pouliot_30207_web-scaled.jpg"
-  },
-  {
-    name: "Villa Bahia",
-    location: "Marrakech",
-    daily_rate: 640,
-    monthly_rate: 19200,
-    pricing_type: "daily",
-    status: "Available",
-    image_url: "https://stayhere.ma/wp-content/uploads/2022/08/Agdir_stayhere_1_024_220723_%C2%A9HARDLIGHT-scaled.jpg"
-  },
-  {
-    name: "Appartement Zaytouna",
-    location: "Tanger",
-    daily_rate: 1059,
-    monthly_rate: 31770,
-    pricing_type: "daily",
-    status: "Available",
-    image_url: "https://concretise.ch/wp-content/uploads/2022/03/adobestock-329752349-1024x683.jpeg"
-  },
-  {
-    name: "Dar Al Noor",
-    location: "Fès",
-    daily_rate: 480,
-    monthly_rate: 14400,
-    pricing_type: "daily",
-    status: "Available",
-    image_url: "https://www.toulouseimmo9.com/medias/64a52a34988b2-1920.jpg"
-  },
-  {
-    name: "Résidence Saada",
-    location: "Rabat",
-    daily_rate: 1022,
-    monthly_rate: 30660,
-    pricing_type: "daily",
-    status: "Available",
-    image_url: "https://www.toulouseimmo9.com/medias/60a2379023649-1200.jpg"
-  }
-] as const
+const formSchema = z.object({
+  email: z.string().email(),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+})
 
 export default function Auth() {
+  const [isLoading, setIsLoading] = useState(false)
+  const [isSignUp, setIsSignUp] = useState(false)
   const navigate = useNavigate()
-  const { user } = useAuth()
 
-  useEffect(() => {
-    if (user) {
-      navigate("/")
-    }
-  }, [user, navigate])
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  })
 
-  const insertTestData = async () => {
-    if (!user) {
-      toast.error("Please login first")
-      return
-    }
-
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    setIsLoading(true)
     try {
-      const propertiesToInsert = testProperties.map(property => ({
-        ...property,
-        user_id: user.id
-      }))
-
-      const { error } = await supabase
-        .from("properties")
-        .insert(propertiesToInsert)
-
-      if (error) throw error
-
-      toast.success("Test properties inserted successfully")
+      if (isSignUp) {
+        await signUpUser(values.email, values.password)
+        toast.success("Sign up successful! Please check your email to verify your account.")
+      } else {
+        await signInUser(values.email, values.password)
+        toast.success("Successfully signed in!")
+        navigate("/dashboard")
+      }
     } catch (error) {
-      console.error("Error inserting test data:", error)
-      toast.error("Failed to insert test properties")
+      toast.error(error instanceof Error ? error.message : "An error occurred")
     }
+    setIsLoading(false)
   }
 
   return (
-    <div className="container relative min-h-screen flex-col items-center justify-center grid lg:max-w-none lg:grid-cols-2 lg:px-0">
-      <div className="relative hidden h-full flex-col bg-muted p-10 text-white lg:flex dark:border-r">
-        <div className="absolute inset-0 bg-zinc-900" />
-        <div className="relative z-20 flex items-center text-lg font-medium">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="mr-2 h-6 w-6"
-          >
-            <path d="M15 6v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3" />
-          </svg>
-          Rental Manager Pro
-        </div>
-        <div className="relative z-20 mt-auto">
-          <blockquote className="space-y-2">
-            <p className="text-lg">
-              Streamline your property management with our intuitive platform.
-            </p>
-          </blockquote>
-        </div>
-      </div>
-      <div className="lg:p-8">
-        <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
-          <div className="flex flex-col space-y-2 text-center">
-            <h1 className="text-2xl font-semibold tracking-tight">
-              Welcome back
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              Enter your email below to create your account or sign in
-            </p>
-          </div>
-          <div className="grid gap-6">
-            <form action="/auth/sign-in" method="POST">
-              <div className="grid gap-2">
-                <div className="grid gap-1">
-                  <Button
-                    onClick={insertTestData}
-                    variant="outline"
-                  >
-                    Insert Test Properties
-                  </Button>
-                </div>
-              </div>
+    <div className="container flex items-center justify-center min-h-screen">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle>{isSignUp ? "Create an account" : "Sign in"}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input placeholder="email@example.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <Input type="password" placeholder="••••••" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <Button type="submit" className="w-full" disabled={isLoading}>
+                {isLoading ? "Loading..." : isSignUp ? "Sign up" : "Sign in"}
+              </Button>
             </form>
+          </Form>
+          <div className="mt-4 text-center">
+            <Button
+              variant="link"
+              onClick={() => setIsSignUp(!isSignUp)}
+              className="text-sm"
+            >
+              {isSignUp
+                ? "Already have an account? Sign in"
+                : "Don't have an account? Sign up"}
+            </Button>
           </div>
-        </div>
-      </div>
+          <TestDataInserter />
+        </CardContent>
+      </Card>
     </div>
   )
 }
