@@ -222,33 +222,39 @@ export type Database = {
       properties: {
         Row: {
           created_at: string
+          daily_rate: number
           id: string
           image_url: string | null
           location: string
+          monthly_rate: number | null
           name: string
-          price: number
+          pricing_type: string | null
           status: Database["public"]["Enums"]["property_status"]
           updated_at: string
           user_id: string
         }
         Insert: {
           created_at?: string
+          daily_rate: number
           id?: string
           image_url?: string | null
           location: string
+          monthly_rate?: number | null
           name: string
-          price: number
+          pricing_type?: string | null
           status?: Database["public"]["Enums"]["property_status"]
           updated_at?: string
           user_id: string
         }
         Update: {
           created_at?: string
+          daily_rate?: number
           id?: string
           image_url?: string | null
           location?: string
+          monthly_rate?: number | null
           name?: string
-          price?: number
+          pricing_type?: string | null
           status?: Database["public"]["Enums"]["property_status"]
           updated_at?: string
           user_id?: string
