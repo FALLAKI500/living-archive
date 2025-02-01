@@ -51,6 +51,8 @@ interface Invoice {
   properties: {
     name: string
   }
+  daily_rate: number
+  days_rented: number
 }
 
 export default function Invoices() {
