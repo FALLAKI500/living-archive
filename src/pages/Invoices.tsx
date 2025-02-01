@@ -5,9 +5,9 @@ import { Button } from "@/components/ui/button"
 import { InvoiceForm } from "@/components/InvoiceForm"
 import { PaymentDialog } from "@/components/PaymentDialog"
 import { InvoicePDFDialog } from "@/components/InvoicePDFDialog"
+import { ExportDialog } from "@/components/ExportDialog"
 import { Input } from "@/components/ui/input"
 import { DatePicker } from "@/components/ui/date-picker"
-import { exportInvoicesToExcel } from "@/utils/excelExport"
 import {
   Select,
   SelectContent,
@@ -30,11 +30,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Plus, Loader2, Search, Check, Clock, AlertCircle, FileSpreadsheet } from "lucide-react"
+import { Plus, Loader2, Search, Check, Clock, AlertCircle } from "lucide-react"
 import { supabase } from "@/integrations/supabase/client"
-import { format, isAfter } from "date-fns"
+import { format } from "date-fns"
 import { Badge } from "@/components/ui/badge"
-import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 
 interface Invoice {
@@ -145,16 +144,6 @@ export default function Invoices() {
 
   const overdueCount = invoices.filter(inv => inv.status === "overdue").length
 
-  const handleExportToExcel = () => {
-    try {
-      exportInvoicesToExcel(filteredInvoices);
-      toast.success("Invoices exported successfully");
-    } catch (error) {
-      console.error("Export error:", error);
-      toast.error("Failed to export invoices");
-    }
-  };
-
   if (isLoading) {
     return (
       <Layout>
@@ -182,14 +171,7 @@ export default function Invoices() {
             )}
           </div>
           <div className="flex gap-2">
-            <Button
-              variant="outline"
-              onClick={handleExportToExcel}
-              className="flex items-center gap-2"
-            >
-              <FileSpreadsheet className="h-4 w-4" />
-              Export to Excel
-            </Button>
+            <ExportDialog invoices={filteredInvoices} />
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogTrigger asChild>
                 <Button>
