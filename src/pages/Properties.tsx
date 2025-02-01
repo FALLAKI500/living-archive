@@ -61,8 +61,9 @@ export default function Properties() {
       property.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       property.location.toLowerCase().includes(searchTerm.toLowerCase())
     
+    const propertyPrice = property.pricing_type === 'daily' ? property.daily_rate : property.monthly_rate
     const matchesPrice =
-      property.price >= priceRange.min && property.price <= priceRange.max
+      propertyPrice >= priceRange.min && propertyPrice <= priceRange.max
     
     const matchesStatus =
       selectedStatus === "all" || property.status === selectedStatus

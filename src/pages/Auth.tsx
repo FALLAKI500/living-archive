@@ -8,7 +8,7 @@ const testProperties = [
   {
     name: "Résidence Al Azhari",
     location: "Casablanca",
-    daily_rate: 549, // Calculated from monthly rate
+    daily_rate: 549,
     monthly_rate: 16470,
     pricing_type: "monthly",
     status: "Rented",
@@ -18,7 +18,7 @@ const testProperties = [
     name: "Villa Bahia",
     location: "Marrakech",
     daily_rate: 640,
-    monthly_rate: 19200, // Calculated from daily rate
+    monthly_rate: 19200,
     pricing_type: "daily",
     status: "Available",
     image_url: "https://stayhere.ma/wp-content/uploads/2022/08/Agdir_stayhere_1_024_220723_%C2%A9HARDLIGHT-scaled.jpg"
