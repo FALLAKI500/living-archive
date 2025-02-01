@@ -10,6 +10,9 @@ import Dashboard from "./pages/Dashboard"
 import Properties from "./pages/Properties"
 import Invoices from "./pages/Invoices"
 import Bookings from "./pages/Bookings"
+import Analytics from "./pages/Analytics"
+import Customers from "./pages/Customers"
+import Expenses from "./pages/Expenses"
 import NotFound from "./pages/NotFound"
 
 const queryClient = new QueryClient()
@@ -74,6 +77,30 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Bookings />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/analytics"
+        element={
+          <ProtectedRoute>
+            <Analytics />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/customers"
+        element={
+          <ProtectedRoute>
+            <Customers />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/expenses"
+        element={
+          <ProtectedRoute>
+            <Expenses />
           </ProtectedRoute>
         }
       />
