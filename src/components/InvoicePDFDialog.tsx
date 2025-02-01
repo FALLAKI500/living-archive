@@ -1,63 +1,60 @@
-import { useState } from "react"
-import { PDFDownloadLink } from "@react-pdf/renderer"
-import { Button } from "@/components/ui/button"
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Download } from "lucide-react"
-import { InvoicePDF } from "./InvoicePDF"
-
-interface Invoice {
-  id: string
-  amount: number
-  due_date: string
-  status: "pending" | "paid" | "overdue" | "cancelled"
-  description: string
-  properties: {
-    name: string
-  }
-  daily_rate: number
-  days_rented: number
-  amount_paid: number
-  start_date: string | null
-  end_date: string | null
-}
+} from "@/components/ui/dialog";
+import { PDFDownloadLink } from "@react-pdf/renderer";
+import { InvoicePDF } from "./InvoicePDF";
+import { useState } from "react";
 
 interface InvoicePDFDialogProps {
-  invoice: Invoice
+  invoice: {
+    id: string;
+    amount: number;
+    due_date: string;
+    description?: string;
+    property: {
+      name: string;
+      location: string;
+    };
+    tenant: {
+      full_name: string;
+    };
+  };
 }
 
 export function InvoicePDFDialog({ invoice }: InvoicePDFDialogProps) {
-  const [isOpen, setIsOpen] = useState(false)
+  const [open, setOpen] = useState(false);
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="outline" size="icon">
-          <Download className="h-4 w-4" />
-        </Button>
+        <Button variant="outline">Download PDF</Button>
       </DialogTrigger>
-      <DialogContent>
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Download Invoice PDF</DialogTitle>
+          <DialogDescription>
+            Click the button below to download the invoice as a PDF file.
+          </DialogDescription>
         </DialogHeader>
-        <div className="flex justify-center">
+        <div className="grid gap-4 py-4">
           <PDFDownloadLink
             document={<InvoicePDF invoice={invoice} />}
             fileName={`invoice-${invoice.id}.pdf`}
           >
             {({ loading }) => (
               <Button disabled={loading}>
-                {loading ? "Generating..." : "Download PDF"}
+                {loading ? "Generating PDF..." : "Download Now"}
               </Button>
             )}
           </PDFDownloadLink>
         </div>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
