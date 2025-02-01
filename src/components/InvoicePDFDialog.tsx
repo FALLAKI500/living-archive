@@ -15,7 +15,7 @@ interface Invoice {
   id: string
   amount: number
   due_date: string
-  status: "pending" | "paid" | "overdue"
+  status: "pending" | "paid" | "overdue" | "cancelled"
   description: string
   properties: {
     name: string
@@ -50,7 +50,7 @@ export function InvoicePDFDialog({ invoice }: InvoicePDFDialogProps) {
             document={<InvoicePDF invoice={invoice} />}
             fileName={`invoice-${invoice.id}.pdf`}
           >
-            {({ loading }) => (
+            {({ loading }: { loading: boolean }) => (
               <Button disabled={loading}>
                 {loading ? "Generating..." : "Download PDF"}
               </Button>
