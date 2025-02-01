@@ -44,7 +44,14 @@ export function BookingForm() {
         .eq("status", "Available")
       
       if (error) throw error
-      setProperties(data || [])
+      
+      // Ensure the data matches the Property type
+      const typedProperties = data?.map(property => ({
+        ...property,
+        pricing_type: property.pricing_type as Property['pricing_type']
+      })) || []
+      
+      setProperties(typedProperties)
     } catch (error) {
       console.error("Error fetching properties:", error)
       toast.error("Failed to load properties")
@@ -54,7 +61,7 @@ export function BookingForm() {
   }
 
   const calculateDays = (start: Date, end: Date) => {
-    return Math.max(0, Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)))
+    return Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)))
   }
 
   const handleBooking = async () => {
@@ -91,10 +98,15 @@ export function BookingForm() {
           daily_rate: dailyRate,
           amount: totalPrice,
           status: "pending",
-          due_date: format(startDate, 'yyyy-MM-dd') // Setting due date to start date
+          due_date: format(startDate, 'yyyy-MM-dd'), // Setting due date to start date
+          amount_paid: 0,
+          days_rented: calculateDays(startDate, endDate)
         }])
 
-      if (bookingError) throw bookingError
+      if (bookingError) {
+        console.error("Booking error:", bookingError)
+        throw bookingError
+      }
 
       toast.success("Booking successfully created!")
       
@@ -149,7 +161,6 @@ export function BookingForm() {
             setDate={setStartDate}
             placeholder="Select start date"
             disabled={!selectedProperty}
-            className="pointer-events-auto"
           />
         </div>
 
@@ -161,7 +172,6 @@ export function BookingForm() {
             placeholder="Select end date"
             disabled={!startDate}
             minDate={startDate}
-            className="pointer-events-auto"
           />
         </div>
 
