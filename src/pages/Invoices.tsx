@@ -29,7 +29,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Plus, Loader2, Search } from "lucide-react"
+import { Plus, Loader2, Search, CheckCircle2, Clock, AlertCircle } from "lucide-react"
 import { supabase } from "@/integrations/supabase/client"
 import { format } from "date-fns"
 import { Badge } from "@/components/ui/badge"
@@ -94,29 +94,39 @@ export default function Invoices() {
     }
   }, [queryClient])
 
+  const getStatusIcon = (status: Invoice["status"]) => {
+    switch (status) {
+      case "paid":
+        return <CheckCircle2 className="h-4 w-4" />
+      case "pending":
+        return <Clock className="h-4 w-4" />
+      case "overdue":
+        return <AlertCircle className="h-4 w-4" />
+      default:
+        return null
+    }
+  }
+
   const getStatusColor = (status: Invoice["status"]) => {
     switch (status) {
       case "paid":
-        return "bg-success/15 text-success"
+        return "bg-success/15 text-success hover:bg-success/25"
       case "pending":
-        return "bg-warning/15 text-warning"
+        return "bg-warning/15 text-warning hover:bg-warning/25"
       case "overdue":
-        return "bg-destructive/15 text-destructive"
+        return "bg-destructive/15 text-destructive hover:bg-destructive/25"
       default:
-        return "bg-muted/15 text-muted-foreground"
+        return "bg-muted/15 text-muted-foreground hover:bg-muted/25"
     }
   }
 
   const filteredInvoices = invoices.filter((invoice) => {
-    // Search by property name
     const matchesSearch = invoice.properties.name
       .toLowerCase()
       .includes(searchTerm.toLowerCase())
 
-    // Filter by status
     const matchesStatus = statusFilter === "all" || invoice.status === statusFilter
 
-    // Filter by date range
     const startDate = startDateFilter ? new Date(startDateFilter) : null
     const endDate = endDateFilter ? new Date(endDateFilter) : null
     const invoiceDate = new Date(invoice.due_date)
@@ -166,7 +176,6 @@ export default function Invoices() {
           </Dialog>
         </div>
 
-        {/* Search and Filter Controls */}
         <div className="flex flex-col md:flex-row gap-4">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
@@ -231,8 +240,9 @@ export default function Invoices() {
                   <TableCell>
                     <Badge
                       variant="secondary"
-                      className={getStatusColor(invoice.status)}
+                      className={`inline-flex items-center gap-1.5 ${getStatusColor(invoice.status)}`}
                     >
+                      {getStatusIcon(invoice.status)}
                       {invoice.status}
                     </Badge>
                   </TableCell>
