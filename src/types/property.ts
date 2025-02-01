@@ -16,3 +16,14 @@ export interface Property {
   pricing_type: PricingType | null
   num_bedrooms?: number | null
 }
+
+export interface CreatePropertyInput {
+  name: string
+  address: string
+  city?: string
+  daily_rate: number
+  monthly_rate?: number
+  pricing_type: PricingType
+  status: PropertyStatus
+  image_url?: string
+}
