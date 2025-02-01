@@ -2,23 +2,21 @@ import { useQuery } from "@tanstack/react-query";
 import { Layout } from "@/components/Layout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertOctagon, Calendar, DollarSign } from "lucide-react";
+import { AlertOctagon, Calendar, DollarSign, Building } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { format, startOfMonth, endOfMonth, addMonths } from "date-fns";
+import { format, startOfMonth, endOfMonth, addMonths, subMonths } from "date-fns";
 import { PaymentBreakdownChart } from "@/components/PaymentBreakdownChart";
 import { MonthlyRevenueTrend } from "@/components/MonthlyRevenueTrend";
 import { RevenueDataTable } from "@/components/RevenueDataTable";
-
-interface DashboardMetrics {
-  totalPayments: number;
-  pendingAmount: number;
-  overdueCount: number;
-  upcomingExpirations: number;
-}
+import { DatePicker } from "@/components/ui/date-picker";
+import { useState } from "react";
 
 export default function Dashboard() {
+  const [startDate, setStartDate] = useState<Date>(subMonths(new Date(), 5));
+  const [endDate, setEndDate] = useState<Date>(new Date());
+
   const { data: metrics, isLoading: metricsLoading } = useQuery({
-    queryKey: ["dashboard-metrics"],
+    queryKey: ["dashboard-metrics", startDate, endDate],
     queryFn: async () => {
       const now = new Date();
       const startDate = startOfMonth(addMonths(now, -5));
@@ -60,45 +58,20 @@ export default function Dashboard() {
     },
   });
 
-  // Fetch monthly revenue data
-  const { data: monthlyRevenue, isLoading: revenueLoading } = useQuery({
-    queryKey: ["monthly-revenue"],
+  const { data: propertyRevenue, isLoading: propertyLoading } = useQuery({
+    queryKey: ["property-revenue"],
     queryFn: async () => {
-      const now = new Date();
-      const startDate = startOfMonth(addMonths(now, -5));
-      const endDate = endOfMonth(now);
-
-      const { data: payments, error } = await supabase
-        .from("payments")
-        .select("amount, payment_date")
-        .gte("payment_date", startDate.toISOString())
-        .lte("payment_date", endDate.toISOString());
+      const { data, error } = await supabase
+        .from("property_revenue_summary")
+        .select("*")
+        .order("total_billed", { ascending: false });
 
       if (error) throw error;
-
-      const monthlyData: { [key: string]: number } = {};
-      
-      // Initialize last 6 months
-      for (let i = -5; i <= 0; i++) {
-        const monthDate = addMonths(now, i);
-        const monthKey = format(monthDate, "MMM yyyy");
-        monthlyData[monthKey] = 0;
-      }
-
-      // Sum payments by month
-      payments?.forEach(payment => {
-        const monthKey = format(new Date(payment.payment_date), "MMM yyyy");
-        monthlyData[monthKey] = (monthlyData[monthKey] || 0) + Number(payment.amount);
-      });
-
-      return Object.entries(monthlyData).map(([month, revenue]) => ({
-        month,
-        revenue,
-      }));
+      return data;
     },
   });
 
-  if (metricsLoading || revenueLoading) {
+  if (metricsLoading || propertyLoading) {
     return (
       <Layout>
         <div className="min-h-[50vh] flex items-center justify-center">
@@ -111,9 +84,26 @@ export default function Dashboard() {
   return (
     <Layout>
       <div className="space-y-8">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-muted-foreground">Your rental property metrics at a glance.</p>
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+            <p className="text-muted-foreground">
+              Your rental property metrics at a glance.
+            </p>
+          </div>
+          <div className="flex gap-4">
+            <DatePicker
+              date={startDate}
+              setDate={setStartDate}
+              placeholder="Start date"
+            />
+            <DatePicker
+              date={endDate}
+              setDate={setEndDate}
+              placeholder="End date"
+              minDate={startDate}
+            />
+          </div>
         </div>
 
         {/* Metrics Cards */}
@@ -124,7 +114,9 @@ export default function Dashboard() {
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">${metrics?.totalPayments.toLocaleString()}</div>
+              <div className="text-2xl font-bold">
+                ${metrics?.totalPayments.toLocaleString()}
+              </div>
               <p className="text-xs text-muted-foreground">Received payments</p>
             </CardContent>
           </Card>
@@ -135,19 +127,25 @@ export default function Dashboard() {
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">${metrics?.pendingAmount.toLocaleString()}</div>
+              <div className="text-2xl font-bold">
+                ${metrics?.pendingAmount.toLocaleString()}
+              </div>
               <p className="text-xs text-muted-foreground">Outstanding balance</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Overdue Invoices</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Overdue Invoices
+              </CardTitle>
               <AlertOctagon className="h-4 w-4 text-destructive" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{metrics?.overdueCount}</div>
-              <p className="text-xs text-muted-foreground">Require immediate attention</p>
+              <p className="text-xs text-muted-foreground">
+                Require immediate attention
+              </p>
             </CardContent>
           </Card>
 
@@ -157,7 +155,9 @@ export default function Dashboard() {
               <Calendar className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{metrics?.upcomingExpirations}</div>
+              <div className="text-2xl font-bold">
+                {metrics?.upcomingExpirations}
+              </div>
               <p className="text-xs text-muted-foreground">Due in next 30 days</p>
             </CardContent>
           </Card>
@@ -167,15 +167,52 @@ export default function Dashboard() {
           <Alert variant="destructive">
             <AlertOctagon className="h-4 w-4" />
             <AlertDescription>
-              You have {metrics.overdueCount} overdue {metrics.overdueCount === 1 ? 'invoice' : 'invoices'} that require your attention.
+              You have {metrics.overdueCount} overdue{" "}
+              {metrics.overdueCount === 1 ? "invoice" : "invoices"} that require
+              your attention.
             </AlertDescription>
           </Alert>
         )}
 
         <div className="grid gap-8 md:grid-cols-2">
-          <MonthlyRevenueTrend />
+          <MonthlyRevenueTrend startDate={startDate} endDate={endDate} />
           <PaymentBreakdownChart />
         </div>
+
+        {/* Top Performing Properties */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Building className="h-5 w-5" />
+              Top Performing Properties
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {propertyRevenue?.slice(0, 5).map((property) => (
+                <div
+                  key={property.property_id}
+                  className="flex items-center justify-between border-b pb-4 last:border-0"
+                >
+                  <div>
+                    <p className="font-medium">{property.property_name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {property.invoice_count} invoices
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-medium">
+                      ${property.total_billed.toLocaleString()}
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      ${property.total_paid.toLocaleString()} paid
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
 
         <RevenueDataTable />
       </div>
