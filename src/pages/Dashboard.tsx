@@ -7,6 +7,7 @@ import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer } from "recharts";
 import { AlertOctagon, Calendar, DollarSign } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { format, startOfMonth, endOfMonth, addMonths } from "date-fns";
+import { PaymentBreakdownChart } from "@/components/PaymentBreakdownChart";
 
 interface DashboardMetrics {
   totalPayments: number;
@@ -176,60 +177,64 @@ export default function Dashboard() {
           </Alert>
         )}
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Monthly Revenue</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-[300px]">
-              <ChartContainer
-                config={{
-                  revenue: {
-                    theme: {
-                      light: "hsl(var(--primary))",
-                      dark: "hsl(var(--primary))",
+        <div className="grid gap-8 md:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Monthly Revenue</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[300px]">
+                <ChartContainer
+                  config={{
+                    revenue: {
+                      theme: {
+                        light: "hsl(var(--primary))",
+                        dark: "hsl(var(--primary))",
+                      },
                     },
-                  },
-                }}
-              >
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={monthlyRevenue}>
-                    <XAxis
-                      dataKey="month"
-                      stroke="hsl(var(--muted-foreground))"
-                      fontSize={12}
-                      tickLine={false}
-                      axisLine={false}
-                    />
-                    <YAxis
-                      stroke="hsl(var(--muted-foreground))"
-                      fontSize={12}
-                      tickLine={false}
-                      axisLine={false}
-                      tickFormatter={(value) => `$${value}`}
-                    />
-                    <Bar
-                      dataKey="revenue"
-                      fill="currentColor"
-                      radius={[4, 4, 0, 0]}
-                      className="fill-primary"
-                    />
-                    <ChartTooltip
-                      content={({ active, payload }) => {
-                        if (!active || !payload) return null;
-                        return (
-                          <ChartTooltipContent>
-                            ${payload[0].value.toLocaleString()}
-                          </ChartTooltipContent>
-                        );
-                      }}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              </ChartContainer>
-            </div>
-          </CardContent>
-        </Card>
+                  }}
+                >
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={monthlyRevenue}>
+                      <XAxis
+                        dataKey="month"
+                        stroke="hsl(var(--muted-foreground))"
+                        fontSize={12}
+                        tickLine={false}
+                        axisLine={false}
+                      />
+                      <YAxis
+                        stroke="hsl(var(--muted-foreground))"
+                        fontSize={12}
+                        tickLine={false}
+                        axisLine={false}
+                        tickFormatter={(value) => `$${value}`}
+                      />
+                      <Bar
+                        dataKey="revenue"
+                        fill="currentColor"
+                        radius={[4, 4, 0, 0]}
+                        className="fill-primary"
+                      />
+                      <ChartTooltip
+                        content={({ active, payload }) => {
+                          if (!active || !payload) return null;
+                          return (
+                            <ChartTooltipContent>
+                              ${payload[0].value.toLocaleString()}
+                            </ChartTooltipContent>
+                          );
+                        }}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </ChartContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          <PaymentBreakdownChart />
+        </div>
       </div>
     </Layout>
   );

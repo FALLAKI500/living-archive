@@ -104,6 +104,13 @@ export type Database = {
             referencedRelation: "properties"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "invoices_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "property_revenue_summary"
+            referencedColumns: ["property_id"]
+          },
         ]
       }
       notifications: {
@@ -250,7 +257,26 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      monthly_revenue_summary: {
+        Row: {
+          invoice_count: number | null
+          month: string | null
+          payment_count: number | null
+          total_revenue: number | null
+        }
+        Relationships: []
+      }
+      property_revenue_summary: {
+        Row: {
+          invoice_count: number | null
+          outstanding_balance: number | null
+          property_id: string | null
+          property_name: string | null
+          total_billed: number | null
+          total_paid: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       [_ in never]: never
