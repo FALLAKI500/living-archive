@@ -1,4 +1,4 @@
-import { Document, Page, Text, View, StyleSheet } from "@react-pdf/renderer"
+import { Document, Page, Text, View, StyleSheet, Image } from "@react-pdf/renderer"
 import { format } from "date-fns"
 
 const styles = StyleSheet.create({
@@ -12,6 +12,16 @@ const styles = StyleSheet.create({
     borderBottom: 1,
     borderBottomColor: "#EEE",
     paddingBottom: 20,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+  },
+  headerLeft: {
+    flex: 1,
+  },
+  headerRight: {
+    width: 200,
+    textAlign: "right",
   },
   title: {
     fontSize: 24,
@@ -82,6 +92,25 @@ const styles = StyleSheet.create({
     color: "#111",
     marginBottom: 4,
   },
+  status: {
+    padding: "4 8",
+    borderRadius: 4,
+    fontSize: 12,
+    textTransform: "uppercase",
+    marginBottom: 10,
+  },
+  statusPaid: {
+    backgroundColor: "#DCFCE7",
+    color: "#166534",
+  },
+  statusPending: {
+    backgroundColor: "#FEF9C3",
+    color: "#854D0E",
+  },
+  statusOverdue: {
+    backgroundColor: "#FEE2E2",
+    color: "#991B1B",
+  },
 })
 
 interface InvoicePDFProps {
@@ -96,16 +125,35 @@ interface InvoicePDFProps {
     }
     daily_rate: number
     days_rented: number
+    status: "pending" | "paid" | "overdue" | "cancelled"
   }
 }
 
 export function InvoicePDF({ invoice }: InvoicePDFProps) {
+  const getStatusStyle = (status: string) => {
+    switch (status.toLowerCase()) {
+      case "paid":
+        return styles.statusPaid
+      case "overdue":
+        return styles.statusOverdue
+      default:
+        return styles.statusPending
+    }
+  }
+
   return (
     <Document>
       <Page size="A4" style={styles.page}>
         <View style={styles.header}>
-          <Text style={styles.title}>Invoice</Text>
-          <Text style={styles.invoiceId}>#{invoice.id.slice(0, 8)}</Text>
+          <View style={styles.headerLeft}>
+            <Text style={styles.title}>Invoice</Text>
+            <Text style={styles.invoiceId}>#{invoice.id.slice(0, 8)}</Text>
+          </View>
+          <View style={styles.headerRight}>
+            <Text style={[styles.status, getStatusStyle(invoice.status)]}>
+              {invoice.status}
+            </Text>
+          </View>
         </View>
 
         <View style={styles.companyInfo}>
