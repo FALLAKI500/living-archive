@@ -1,3 +1,5 @@
+import { useState } from "react"
+import { PDFDownloadLink } from "@react-pdf/renderer"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -7,21 +9,22 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Download } from "lucide-react"
-import { PDFDownloadLink } from "@react-pdf/renderer"
 import { InvoicePDF } from "./InvoicePDF"
 
 interface Invoice {
   id: string
   amount: number
-  amount_paid: number
   due_date: string
-  status: "pending" | "paid" | "overdue" | "cancelled"
-  description: string | null
+  status: "pending" | "paid" | "overdue"
+  description: string
   properties: {
     name: string
   }
   daily_rate: number
   days_rented: number
+  amount_paid: number
+  start_date: string | null
+  end_date: string | null
 }
 
 interface InvoicePDFDialogProps {
@@ -29,8 +32,10 @@ interface InvoicePDFDialogProps {
 }
 
 export function InvoicePDFDialog({ invoice }: InvoicePDFDialogProps) {
+  const [isOpen, setIsOpen] = useState(false)
+
   return (
-    <Dialog>
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button variant="outline" size="icon">
           <Download className="h-4 w-4" />
@@ -44,11 +49,10 @@ export function InvoicePDFDialog({ invoice }: InvoicePDFDialogProps) {
           <PDFDownloadLink
             document={<InvoicePDF invoice={invoice} />}
             fileName={`invoice-${invoice.id}.pdf`}
-            className="inline-flex"
           >
             {({ loading }) => (
               <Button disabled={loading}>
-                {loading ? "Generating PDF..." : "Download PDF"}
+                {loading ? "Generating..." : "Download PDF"}
               </Button>
             )}
           </PDFDownloadLink>
