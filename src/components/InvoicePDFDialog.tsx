@@ -49,7 +49,11 @@ export function InvoicePDFDialog({ invoice }: InvoicePDFDialogProps) {
           >
             {({ loading }) => (
               <Button className="w-full" disabled={loading}>
-                {loading ? "Preparing..." : "Download PDF"}
+                {loading ? (
+                  <>Preparing...</>
+                ) : (
+                  <>Download PDF</>
+                )}
               </Button>
             )}
           </PDFDownloadLink>
