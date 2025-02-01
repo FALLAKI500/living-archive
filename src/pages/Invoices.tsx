@@ -29,10 +29,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Plus, Loader2, Search, CheckCircle2, Clock, AlertCircle } from "lucide-react"
+import { Plus, Loader2, Search, Check, Clock, BellAlert } from "lucide-react"
 import { supabase } from "@/integrations/supabase/client"
-import { format } from "date-fns"
+import { format, isAfter } from "date-fns"
 import { Badge } from "@/components/ui/badge"
+import { toast } from "sonner"
 
 interface Invoice {
   id: string
@@ -72,6 +73,36 @@ export default function Invoices() {
     },
   })
 
+  // Check for overdue invoices and update their status
+  useEffect(() => {
+    const updateOverdueInvoices = async () => {
+      const overdueInvoices = invoices.filter(invoice => {
+        return (
+          invoice.status === "pending" &&
+          isAfter(new Date(), new Date(invoice.due_date))
+        )
+      })
+
+      for (const invoice of overdueInvoices) {
+        const { error } = await supabase
+          .from("invoices")
+          .update({ status: "overdue" })
+          .eq("id", invoice.id)
+
+        if (error) {
+          console.error("Error updating overdue invoice:", error)
+          toast.error(`Failed to update invoice ${invoice.id} status`)
+        }
+      }
+
+      if (overdueInvoices.length > 0) {
+        queryClient.invalidateQueries({ queryKey: ["invoices"] })
+      }
+    }
+
+    updateOverdueInvoices()
+  }, [invoices, queryClient])
+
   // Set up real-time subscription
   useEffect(() => {
     const channel = supabase
@@ -97,11 +128,11 @@ export default function Invoices() {
   const getStatusIcon = (status: Invoice["status"]) => {
     switch (status) {
       case "paid":
-        return <CheckCircle2 className="h-4 w-4" />
+        return <Check className="h-4 w-4" />
       case "pending":
         return <Clock className="h-4 w-4" />
       case "overdue":
-        return <AlertCircle className="h-4 w-4" />
+        return <BellAlert className="h-4 w-4" />
       default:
         return null
     }
@@ -151,11 +182,21 @@ export default function Invoices() {
     )
   }
 
+  const overdueCount = invoices.filter(inv => inv.status === "overdue").length
+
   return (
     <Layout>
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold tracking-tight">Invoices</h1>
+          <div className="space-y-1">
+            <h1 className="text-3xl font-bold tracking-tight">Invoices</h1>
+            {overdueCount > 0 && (
+              <p className="text-sm text-destructive flex items-center gap-2">
+                <BellAlert className="h-4 w-4" />
+                {overdueCount} overdue {overdueCount === 1 ? 'invoice' : 'invoices'}
+              </p>
+            )}
+          </div>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button>
