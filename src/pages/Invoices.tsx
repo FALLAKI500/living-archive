@@ -4,6 +4,15 @@ import { Layout } from "@/components/Layout"
 import { Button } from "@/components/ui/button"
 import { InvoiceForm } from "@/components/InvoiceForm"
 import { PaymentDialog } from "@/components/PaymentDialog"
+import { Input } from "@/components/ui/input"
+import { DatePicker } from "@/components/ui/date-picker"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import {
   Dialog,
   DialogContent,
@@ -19,7 +28,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Plus, Loader2 } from "lucide-react"
+import { Plus, Loader2, Search } from "lucide-react"
 import { supabase } from "@/integrations/supabase/client"
 import { format } from "date-fns"
 import { Badge } from "@/components/ui/badge"
@@ -34,6 +43,8 @@ interface Invoice {
   status: "pending" | "paid" | "overdue" | "cancelled"
   description: string
   created_at: string
+  start_date: string | null
+  end_date: string | null
   properties: {
     name: string
   }
@@ -41,6 +52,10 @@ interface Invoice {
 
 export default function Invoices() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [statusFilter, setStatusFilter] = useState<Invoice["status"] | "all">("all")
+  const [startDateFilter, setStartDateFilter] = useState<Date | undefined>()
+  const [endDateFilter, setEndDateFilter] = useState<Date | undefined>()
   const queryClient = useQueryClient()
 
   const { data: invoices = [], isLoading } = useQuery({
@@ -91,6 +106,27 @@ export default function Invoices() {
     }
   }
 
+  const filteredInvoices = invoices.filter((invoice) => {
+    // Search by property name
+    const matchesSearch = invoice.properties.name
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase())
+
+    // Filter by status
+    const matchesStatus = statusFilter === "all" || invoice.status === statusFilter
+
+    // Filter by date range
+    const startDate = startDateFilter ? new Date(startDateFilter) : null
+    const endDate = endDateFilter ? new Date(endDateFilter) : null
+    const invoiceDate = new Date(invoice.due_date)
+
+    const matchesDateRange =
+      (!startDate || invoiceDate >= startDate) &&
+      (!endDate || invoiceDate <= endDate)
+
+    return matchesSearch && matchesStatus && matchesDateRange
+  })
+
   if (isLoading) {
     return (
       <Layout>
@@ -129,6 +165,46 @@ export default function Invoices() {
           </Dialog>
         </div>
 
+        {/* Search and Filter Controls */}
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by property name..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <Select
+            value={statusFilter}
+            onValueChange={(value) => setStatusFilter(value as Invoice["status"] | "all")}
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Statuses</SelectItem>
+              <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="paid">Paid</SelectItem>
+              <SelectItem value="overdue">Overdue</SelectItem>
+              <SelectItem value="cancelled">Cancelled</SelectItem>
+            </SelectContent>
+          </Select>
+          <div className="flex gap-2">
+            <DatePicker
+              date={startDateFilter}
+              setDate={setStartDateFilter}
+              placeholder="Start date"
+            />
+            <DatePicker
+              date={endDateFilter}
+              setDate={setEndDateFilter}
+              placeholder="End date"
+            />
+          </div>
+        </div>
+
         <div className="rounded-md border">
           <Table>
             <TableHeader>
@@ -143,7 +219,7 @@ export default function Invoices() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {invoices.map((invoice) => (
+              {filteredInvoices.map((invoice) => (
                 <TableRow key={invoice.id}>
                   <TableCell>{invoice.properties.name}</TableCell>
                   <TableCell>${invoice.amount.toLocaleString()}</TableCell>
