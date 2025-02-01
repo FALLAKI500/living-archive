@@ -1,34 +1,37 @@
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
+import { Download } from "lucide-react"
 import { PDFDownloadLink } from "@react-pdf/renderer"
-import { Invoice } from "@/types/invoice"
-import { InvoicePDF } from "./InvoicePDF"
+import { InvoicePDF } from "@/components/InvoicePDF"
+import type { Invoice } from "@/types/invoice"
 
 interface InvoicePDFDialogProps {
-  invoice: Invoice
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  invoice: Invoice & {
+    properties: {
+      name: string;
+    };
+  }
 }
 
-export function InvoicePDFDialog({ invoice, open, onOpenChange }: InvoicePDFDialogProps) {
+export function InvoicePDFDialog({ invoice }: InvoicePDFDialogProps) {
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="outline" size="icon">
+          <Download className="h-4 w-4" />
+        </Button>
+      </DialogTrigger>
       <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Download Invoice PDF</DialogTitle>
-        </DialogHeader>
-        <div className="flex justify-center p-4">
-          <PDFDownloadLink
-            document={<InvoicePDF invoice={invoice} />}
-            fileName={`invoice-${invoice.id}.pdf`}
-          >
-            {({ loading }) => (
-              <Button disabled={loading}>
-                {loading ? "Generating PDF..." : "Download PDF"}
-              </Button>
-            )}
-          </PDFDownloadLink>
-        </div>
+        <PDFDownloadLink
+          document={<InvoicePDF invoice={invoice} />}
+          fileName={`invoice-${invoice.id}.pdf`}
+        >
+          {({ loading }) => (
+            <Button disabled={loading}>
+              {loading ? "Generating PDF..." : "Download PDF"}
+            </Button>
+          )}
+        </PDFDownloadLink>
       </DialogContent>
     </Dialog>
   )

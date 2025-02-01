@@ -100,7 +100,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
             </div>
             <div className="flex items-center justify-between">
               <span className="text-2xl font-bold">
-                ${displayPrice.toLocaleString()}/{pricingType === "daily" ? "day" : "month"}
+                {displayPrice.toLocaleString()} MAD/{pricingType === "daily" ? "day" : "month"}
               </span>
               <div className="space-x-2">
                 <Dialog>
@@ -147,5 +147,5 @@ export function PropertyCard({ property }: PropertyCardProps) {
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }
