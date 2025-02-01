@@ -1,5 +1,5 @@
 export type PropertyStatus = "Available" | "Rented"
-export type PricingType = "daily" | "monthly"
+export type PricingType = "daily" | "monthly" | null
 
 export interface Property {
   id: string
@@ -13,7 +13,7 @@ export interface Property {
   created_at: string
   updated_at: string
   user_id: string
-  pricing_type?: PricingType | null
+  pricing_type?: PricingType
   num_bedrooms?: number | null
 }
 
