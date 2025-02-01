@@ -6,6 +6,7 @@ import { AlertOctagon, Calendar, DollarSign } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { format, startOfMonth, endOfMonth, addMonths } from "date-fns";
 import { PaymentBreakdownChart } from "@/components/PaymentBreakdownChart";
+import { MonthlyRevenueTrend } from "@/components/MonthlyRevenueTrend";
 import { RevenueDataTable } from "@/components/RevenueDataTable";
 
 interface DashboardMetrics {
@@ -13,11 +14,6 @@ interface DashboardMetrics {
   pendingAmount: number;
   overdueCount: number;
   upcomingExpirations: number;
-}
-
-interface MonthlyRevenue {
-  month: string;
-  revenue: number;
 }
 
 export default function Dashboard() {
@@ -121,6 +117,7 @@ export default function Dashboard() {
           <p className="text-muted-foreground">Your rental property metrics at a glance.</p>
         </div>
 
+        {/* Metrics Cards */}
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -177,61 +174,7 @@ export default function Dashboard() {
         )}
 
         <div className="grid gap-8 md:grid-cols-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Monthly Revenue</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="h-[300px]">
-                <ChartContainer
-                  config={{
-                    revenue: {
-                      theme: {
-                        light: "hsl(var(--primary))",
-                        dark: "hsl(var(--primary))",
-                      },
-                    },
-                  }}
-                >
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={monthlyRevenue}>
-                      <XAxis
-                        dataKey="month"
-                        stroke="hsl(var(--muted-foreground))"
-                        fontSize={12}
-                        tickLine={false}
-                        axisLine={false}
-                      />
-                      <YAxis
-                        stroke="hsl(var(--muted-foreground))"
-                        fontSize={12}
-                        tickLine={false}
-                        axisLine={false}
-                        tickFormatter={(value) => `$${value}`}
-                      />
-                      <Bar
-                        dataKey="revenue"
-                        fill="currentColor"
-                        radius={[4, 4, 0, 0]}
-                        className="fill-primary"
-                      />
-                      <ChartTooltip
-                        content={({ active, payload }) => {
-                          if (!active || !payload) return null;
-                          return (
-                            <ChartTooltipContent>
-                              ${payload[0].value.toLocaleString()}
-                            </ChartTooltipContent>
-                          );
-                        }}
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </ChartContainer>
-              </div>
-            </CardContent>
-          </Card>
-
+          <MonthlyRevenueTrend />
           <PaymentBreakdownChart />
         </div>
 
