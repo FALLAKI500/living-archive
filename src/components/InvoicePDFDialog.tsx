@@ -48,7 +48,7 @@ export function InvoicePDFDialog({ invoice }: InvoicePDFDialogProps) {
             fileName={`invoice-${invoice.id.slice(0, 8)}.pdf`}
           >
             {({ loading }) => (
-              <Button className="w-full" disabled={loading}>
+              <Button className="w-full" disabled={loading} type="button">
                 {loading ? "Preparing..." : "Download PDF"}
               </Button>
             )}
