@@ -1,5 +1,5 @@
-import { useState } from "react"
-import { useQuery } from "@tanstack/react-query"
+import { useState, useEffect } from "react"
+import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { Layout } from "@/components/Layout"
 import { Button } from "@/components/ui/button"
 import { InvoiceForm } from "@/components/InvoiceForm"
@@ -39,6 +39,7 @@ interface Invoice {
 
 export default function Invoices() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const queryClient = useQueryClient()
 
   const { data: invoices = [], isLoading } = useQuery({
     queryKey: ["invoices"],
@@ -52,6 +53,29 @@ export default function Invoices() {
       return data as Invoice[]
     },
   })
+
+  // Set up real-time subscription
+  useEffect(() => {
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // Listen to all changes (INSERT, UPDATE, DELETE)
+          schema: 'public',
+          table: 'invoices'
+        },
+        () => {
+          // Invalidate and refetch invoices when any change occurs
+          queryClient.invalidateQueries({ queryKey: ["invoices"] })
+        }
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [queryClient])
 
   const getStatusColor = (status: Invoice["status"]) => {
     switch (status) {
