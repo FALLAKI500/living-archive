@@ -1,10 +1,4 @@
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { PDFDownloadLink } from "@react-pdf/renderer"
 import { Invoice } from "@/types/invoice"
@@ -12,19 +6,16 @@ import { InvoicePDF } from "./InvoicePDF"
 
 interface InvoicePDFDialogProps {
   invoice: Invoice
+  open: boolean
+  onOpenChange: (open: boolean) => void
 }
 
-export function InvoicePDFDialog({ invoice }: InvoicePDFDialogProps) {
+export function InvoicePDFDialog({ invoice, open, onOpenChange }: InvoicePDFDialogProps) {
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="sm">
-          Download PDF
-        </Button>
-      </DialogTrigger>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Download Invoice</DialogTitle>
+          <DialogTitle>Download Invoice PDF</DialogTitle>
         </DialogHeader>
         <div className="flex justify-center p-4">
           <PDFDownloadLink
@@ -33,7 +24,7 @@ export function InvoicePDFDialog({ invoice }: InvoicePDFDialogProps) {
           >
             {({ loading }) => (
               <Button disabled={loading}>
-                {loading ? "Generating PDF..." : "Download Now"}
+                {loading ? "Generating PDF..." : "Download PDF"}
               </Button>
             )}
           </PDFDownloadLink>
