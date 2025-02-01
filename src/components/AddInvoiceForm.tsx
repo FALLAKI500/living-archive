@@ -22,13 +22,33 @@ export function AddInvoiceForm({ propertyId, tenantId, onSuccess }: AddInvoiceFo
   const [isSubmitting, setIsSubmitting] = useState(false)
   const queryClient = useQueryClient()
 
+  const validateForm = () => {
+    if (!startDate) {
+      toast.error("Please select a start date")
+      return false
+    }
+    if (!endDate) {
+      toast.error("Please select an end date")
+      return false
+    }
+    if (!dailyRate || parseFloat(dailyRate) <= 0) {
+      toast.error("Please enter a valid daily rate")
+      return false
+    }
+    if (endDate < startDate) {
+      toast.error("End date cannot be before start date")
+      return false
+    }
+    return true
+  }
+
   const createInvoiceMutation = useMutation({
     mutationFn: async () => {
-      if (!startDate || !endDate || !dailyRate) {
-        throw new Error("Please fill in all required fields")
+      if (!validateForm()) {
+        throw new Error("Form validation failed")
       }
 
-      const { error } = await supabase.from("invoices").insert({
+      const { data, error } = await supabase.from("invoices").insert({
         property_id: propertyId,
         tenant_id: tenantId,
         daily_rate: parseFloat(dailyRate),
@@ -38,13 +58,19 @@ export function AddInvoiceForm({ propertyId, tenantId, onSuccess }: AddInvoiceFo
         description,
         amount: 0, // This will be calculated by the trigger
         amount_paid: 0,
-      })
+      }).select()
 
       if (error) throw error
+      return data
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["invoices"] })
       toast.success("Invoice created successfully")
+      // Reset form
+      setStartDate(undefined)
+      setEndDate(undefined)
+      setDailyRate("")
+      setDescription("")
       if (onSuccess) onSuccess()
     },
     onError: (error) => {
@@ -62,11 +88,6 @@ export function AddInvoiceForm({ propertyId, tenantId, onSuccess }: AddInvoiceFo
     createInvoiceMutation.mutate()
   }
 
-  const disabledDates = (date: Date) => {
-    if (!startDate) return false
-    return date < startDate
-  }
-
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
@@ -79,6 +100,7 @@ export function AddInvoiceForm({ propertyId, tenantId, onSuccess }: AddInvoiceFo
           onChange={(e) => setDailyRate(e.target.value)}
           required
           placeholder="Enter daily rate"
+          min="0"
         />
       </div>
 
