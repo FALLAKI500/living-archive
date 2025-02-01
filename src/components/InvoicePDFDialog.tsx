@@ -21,6 +21,8 @@ interface InvoicePDFDialogProps {
     properties: {
       name: string
     }
+    daily_rate: number
+    days_rented: number
   }
 }
 

@@ -51,10 +51,6 @@ const styles = StyleSheet.create({
     borderTopColor: "#EEE",
     paddingTop: 10,
   },
-  totalRow: {
-    flexDirection: "row",
-    marginBottom: 5,
-  },
   totalLabel: {
     width: 120,
     fontWeight: "bold",
@@ -77,6 +73,15 @@ const styles = StyleSheet.create({
     borderTopColor: "#EEE",
     paddingTop: 10,
   },
+  companyInfo: {
+    marginBottom: 20,
+    color: "#666",
+  },
+  companyName: {
+    fontSize: 14,
+    color: "#111",
+    marginBottom: 4,
+  },
 })
 
 interface InvoicePDFProps {
@@ -89,6 +94,8 @@ interface InvoicePDFProps {
     properties: {
       name: string
     }
+    daily_rate: number
+    days_rented: number
   }
 }
 
@@ -101,11 +108,26 @@ export function InvoicePDF({ invoice }: InvoicePDFProps) {
           <Text style={styles.invoiceId}>#{invoice.id.slice(0, 8)}</Text>
         </View>
 
+        <View style={styles.companyInfo}>
+          <Text style={styles.companyName}>Property Management Co.</Text>
+          <Text>123 Business Avenue</Text>
+          <Text>Business District, BZ 12345</Text>
+          <Text>contact@propertymanagement.com</Text>
+        </View>
+
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Property Details</Text>
           <View style={styles.row}>
             <Text style={styles.label}>Property:</Text>
             <Text style={styles.value}>{invoice.properties.name}</Text>
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>Daily Rate:</Text>
+            <Text style={styles.value}>${invoice.daily_rate.toLocaleString()}</Text>
+          </View>
+          <View style={styles.row}>
+            <Text style={styles.label}>Days Rented:</Text>
+            <Text style={styles.value}>{invoice.days_rented}</Text>
           </View>
         </View>
 
