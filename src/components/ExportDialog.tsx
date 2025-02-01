@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/dialog"
 import { FileSpreadsheet, FileDown } from "lucide-react"
 import { exportInvoicesToExcel } from "@/utils/excelExport"
+import { exportRevenueToExcel } from "@/utils/revenueExport"
 import { toast } from "sonner"
 
 interface Invoice {
@@ -39,6 +40,16 @@ export function ExportDialog({ invoices }: ExportDialogProps) {
     }
   }
 
+  const handleExportRevenueToExcel = async () => {
+    try {
+      await exportRevenueToExcel()
+      toast.success("Revenue data exported successfully")
+    } catch (error) {
+      console.error("Revenue export error:", error)
+      toast.error("Failed to export revenue data")
+    }
+  }
+
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -49,7 +60,7 @@ export function ExportDialog({ invoices }: ExportDialogProps) {
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Export Invoices</DialogTitle>
+          <DialogTitle>Export Reports</DialogTitle>
         </DialogHeader>
         <div className="flex flex-col gap-4">
           <Button
@@ -58,7 +69,15 @@ export function ExportDialog({ invoices }: ExportDialogProps) {
             onClick={handleExportToExcel}
           >
             <FileSpreadsheet className="h-4 w-4" />
-            Export to Excel
+            Export Invoices to Excel
+          </Button>
+          <Button
+            variant="outline"
+            className="gap-2 justify-start"
+            onClick={handleExportRevenueToExcel}
+          >
+            <FileSpreadsheet className="h-4 w-4" />
+            Export Revenue Report to Excel
           </Button>
           <Button
             variant="outline"
