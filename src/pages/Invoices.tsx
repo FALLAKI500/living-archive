@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query"
 import { Layout } from "@/components/Layout"
 import { Button } from "@/components/ui/button"
 import { InvoiceForm } from "@/components/InvoiceForm"
+import { PaymentDialog } from "@/components/PaymentDialog"
 import {
   Dialog,
   DialogContent,
@@ -28,6 +29,7 @@ interface Invoice {
   property_id: string
   tenant_id: string
   amount: number
+  amount_paid: number
   due_date: string
   status: "pending" | "paid" | "overdue" | "cancelled"
   description: string
@@ -61,12 +63,11 @@ export default function Invoices() {
       .on(
         'postgres_changes',
         {
-          event: '*', // Listen to all changes (INSERT, UPDATE, DELETE)
+          event: '*',
           schema: 'public',
           table: 'invoices'
         },
         () => {
-          // Invalidate and refetch invoices when any change occurs
           queryClient.invalidateQueries({ queryKey: ["invoices"] })
         }
       )
@@ -134,9 +135,11 @@ export default function Invoices() {
               <TableRow>
                 <TableHead>Property</TableHead>
                 <TableHead>Amount</TableHead>
+                <TableHead>Paid</TableHead>
                 <TableHead>Due Date</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Description</TableHead>
+                <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -144,6 +147,7 @@ export default function Invoices() {
                 <TableRow key={invoice.id}>
                   <TableCell>{invoice.properties.name}</TableCell>
                   <TableCell>${invoice.amount.toLocaleString()}</TableCell>
+                  <TableCell>${invoice.amount_paid.toLocaleString()}</TableCell>
                   <TableCell>
                     {format(new Date(invoice.due_date), "PPP")}
                   </TableCell>
@@ -156,6 +160,16 @@ export default function Invoices() {
                     </Badge>
                   </TableCell>
                   <TableCell>{invoice.description}</TableCell>
+                  <TableCell>
+                    <PaymentDialog
+                      invoiceId={invoice.id}
+                      currentAmount={invoice.amount}
+                      amountPaid={invoice.amount_paid}
+                      onSuccess={() => {
+                        queryClient.invalidateQueries({ queryKey: ["invoices"] })
+                      }}
+                    />
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
