@@ -1,62 +1,58 @@
-import { useQuery } from "@tanstack/react-query"
-import { Layout } from "@/components/Layout"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { AlertOctagon, Calendar, DollarSign, Building } from "lucide-react"
-import { supabase } from "@/integrations/supabase/client"
-import { format, startOfMonth, endOfMonth, addMonths, subMonths } from "date-fns"
-import { PaymentBreakdownChart } from "@/components/PaymentBreakdownChart"
-import { MonthlyRevenueTrend } from "@/components/MonthlyRevenueTrend"
-import { RevenueDataTable } from "@/components/RevenueDataTable"
-import { DatePicker } from "@/components/ui/date-picker"
-import { useState } from "react"
+import { useQuery } from "@tanstack/react-query";
+import { Layout } from "@/components/Layout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertOctagon, Calendar, DollarSign, Building } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { format, startOfMonth, endOfMonth, addMonths, subMonths } from "date-fns";
+import { PaymentBreakdownChart } from "@/components/PaymentBreakdownChart";
+import { MonthlyRevenueTrend } from "@/components/MonthlyRevenueTrend";
+import { RevenueDataTable } from "@/components/RevenueDataTable";
+import { DatePicker } from "@/components/ui/date-picker";
+import { useState } from "react";
 
 export default function Dashboard() {
-  const [startDate, setStartDate] = useState<Date>(subMonths(new Date(), 5))
-  const [endDate, setEndDate] = useState<Date>(new Date())
+  const [startDate, setStartDate] = useState<Date>(subMonths(new Date(), 5));
+  const [endDate, setEndDate] = useState<Date>(new Date());
 
   const { data: metrics, isLoading: metricsLoading } = useQuery({
     queryKey: ["dashboard-metrics", startDate, endDate],
     queryFn: async () => {
-      const now = new Date()
-      const startDate = startOfMonth(addMonths(now, -5))
-      const endDate = endOfMonth(now)
-
       // Get total payments received
       const { data: payments, error: paymentsError } = await supabase
         .from("payments")
         .select("amount")
         .gte("payment_date", startDate.toISOString())
-        .lte("payment_date", endDate.toISOString())
+        .lte("payment_date", endDate.toISOString());
 
-      if (paymentsError) throw paymentsError
+      if (paymentsError) throw paymentsError;
 
       // Get pending and overdue invoices
       const { data: invoices, error: invoicesError } = await supabase
         .from("invoices")
-        .select("amount, amount_paid, status, due_date")
+        .select("amount, amount_paid, status, due_date");
 
-      if (invoicesError) throw invoicesError
+      if (invoicesError) throw invoicesError;
 
-      const totalPayments = payments?.reduce((sum, p) => sum + (Number(p.amount) || 0), 0) || 0
+      const totalPayments = payments?.reduce((sum, p) => sum + Number(p.amount || 0), 0) || 0;
       const pendingAmount = invoices
         ?.filter(inv => inv.status === "pending")
-        .reduce((sum, inv) => sum + ((Number(inv.amount) || 0) - (Number(inv.amount_paid) || 0)), 0) || 0
-      const overdueCount = invoices?.filter(inv => inv.status === "overdue").length || 0
+        .reduce((sum, inv) => sum + (Number(inv.amount || 0) - Number(inv.amount_paid || 0)), 0) || 0;
+      const overdueCount = invoices?.filter(inv => inv.status === "overdue").length || 0;
       const upcomingExpirations = invoices?.filter(inv => {
-        const dueDate = new Date(inv.due_date)
-        const thirtyDaysFromNow = addMonths(now, 1)
-        return dueDate <= thirtyDaysFromNow && inv.status !== "paid"
-      }).length || 0
+        const dueDate = new Date(inv.due_date);
+        const thirtyDaysFromNow = addMonths(new Date(), 1);
+        return dueDate <= thirtyDaysFromNow && inv.status !== "paid";
+      }).length || 0;
 
       return {
         totalPayments,
         pendingAmount,
         overdueCount,
         upcomingExpirations,
-      }
+      };
     },
-  })
+  });
 
   const { data: propertyRevenue, isLoading: propertyLoading } = useQuery({
     queryKey: ["property-revenue"],
@@ -64,12 +60,12 @@ export default function Dashboard() {
       const { data, error } = await supabase
         .from("property_revenue_summary")
         .select("*")
-        .order("total_billed", { ascending: false })
+        .order("total_billed", { ascending: false });
 
-      if (error) throw error
-      return data
+      if (error) throw error;
+      return data || [];
     },
-  })
+  });
 
   if (metricsLoading || propertyLoading) {
     return (
@@ -78,7 +74,7 @@ export default function Dashboard() {
           <p className="text-lg text-muted-foreground">Loading dashboard...</p>
         </div>
       </Layout>
-    )
+    );
   }
 
   return (
@@ -142,7 +138,7 @@ export default function Dashboard() {
               <AlertOctagon className="h-4 w-4 text-destructive" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{metrics?.overdueCount}</div>
+              <div className="text-2xl font-bold">{metrics?.overdueCount || 0}</div>
               <p className="text-xs text-muted-foreground">
                 Require immediate attention
               </p>
@@ -156,7 +152,7 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {metrics?.upcomingExpirations}
+                {metrics?.upcomingExpirations || 0}
               </div>
               <p className="text-xs text-muted-foreground">Due in next 30 days</p>
             </CardContent>
@@ -202,10 +198,10 @@ export default function Dashboard() {
                   </div>
                   <div className="text-right">
                     <p className="font-medium">
-                      {property.total_billed.toLocaleString()} MAD
+                      {(property.total_billed || 0).toLocaleString()} MAD
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      {property.total_paid.toLocaleString()} MAD paid
+                      {(property.total_paid || 0).toLocaleString()} MAD paid
                     </p>
                   </div>
                 </div>
@@ -217,5 +213,5 @@ export default function Dashboard() {
         <RevenueDataTable />
       </div>
     </Layout>
-  )
+  );
 }
