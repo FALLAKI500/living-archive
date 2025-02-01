@@ -10,11 +10,11 @@ const corsHeaders = {
 };
 
 interface EmailRequest {
-  customerName: string;
   invoiceId: string;
+  customerEmail: string;
+  customerName: string;
   amount: number;
   dueDate: string;
-  email: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -24,13 +24,13 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { customerName, invoiceId, amount, dueDate, email }: EmailRequest = await req.json();
+    const { customerName, invoiceId, amount, dueDate, customerEmail }: EmailRequest = await req.json();
 
-    console.log(`Sending overdue invoice email to ${email} for invoice ${invoiceId}`);
+    console.log(`Sending overdue invoice email to ${customerEmail} for invoice ${invoiceId}`);
 
     const emailResponse = await resend.emails.send({
       from: "Invoicing System <onboarding@resend.dev>",
-      to: [email],
+      to: [customerEmail],
       subject: "Important: Invoice Payment Overdue",
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
