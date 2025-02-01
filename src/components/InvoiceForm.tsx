@@ -32,21 +32,32 @@ export function InvoiceForm({ propertyId, tenantId, onSuccess }: InvoiceFormProp
     setIsSubmitting(true)
 
     try {
+      if (!startDate || !endDate) {
+        throw new Error("Please select both start and end dates")
+      }
+
       const formData = new FormData(e.currentTarget)
-      const values = Object.fromEntries(formData.entries())
+      const dailyRate = parseFloat(formData.get('daily_rate') as string)
+      
+      if (isNaN(dailyRate) || dailyRate <= 0) {
+        throw new Error("Please enter a valid daily rate")
+      }
 
       const { error } = await supabase.from("invoices").insert({
         property_id: propertyId,
         tenant_id: tenantId,
-        daily_rate: parseFloat(values.daily_rate as string),
-        start_date: startDate ? format(startDate, 'yyyy-MM-dd') : null,
-        end_date: endDate ? format(endDate, 'yyyy-MM-dd') : null,
-        due_date: endDate ? format(endDate, 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'), // Set due_date to end_date or today
+        daily_rate: dailyRate,
+        start_date: format(startDate, 'yyyy-MM-dd'),
+        end_date: format(endDate, 'yyyy-MM-dd'),
+        due_date: format(endDate, 'yyyy-MM-dd'),
         amount: 0, // This will be calculated by the trigger
-        description: values.description as string,
+        description: formData.get('description') as string,
       })
 
-      if (error) throw error
+      if (error) {
+        console.error("Supabase error:", error)
+        throw new Error(error.message)
+      }
 
       toast({
         title: "Success",
@@ -59,7 +70,7 @@ export function InvoiceForm({ propertyId, tenantId, onSuccess }: InvoiceFormProp
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to create invoice. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to create invoice. Please try again.",
       })
     } finally {
       setIsSubmitting(false)
