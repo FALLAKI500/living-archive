@@ -16,7 +16,9 @@ import * as z from "zod"
 const propertySchema = z.object({
   name: z.string().min(1, "Name is required"),
   location: z.string().min(1, "Location is required"),
-  price: z.number().min(0, "Price must be a positive number"),
+  daily_rate: z.number().min(0, "Daily rate must be a positive number"),
+  monthly_rate: z.number().optional(),
+  pricing_type: z.enum(["daily", "monthly"]),
   status: z.enum(["Available", "Rented"]),
   image_url: z.string().optional(),
 })
@@ -35,7 +37,9 @@ export function PropertyForm({ property }: PropertyFormProps) {
     defaultValues: {
       name: property?.name ?? "",
       location: property?.location ?? "",
-      price: property?.price ?? 0,
+      daily_rate: property?.daily_rate ?? 0,
+      monthly_rate: property?.monthly_rate ?? 0,
+      pricing_type: property?.pricing_type ?? "monthly",
       status: property?.status ?? "Available",
       image_url: property?.image_url ?? "",
     },
@@ -109,10 +113,18 @@ export function PropertyForm({ property }: PropertyFormProps) {
         />
         <PropertyInput
           form={form}
-          name="price"
-          label="Price per month"
-          placeholder="Price"
+          name="daily_rate"
+          label="Daily Rate"
+          placeholder="Daily rate"
           type="number"
+        />
+        <PropertyInput
+          form={form}
+          name="monthly_rate"
+          label="Monthly Rate"
+          placeholder="Monthly rate (optional)"
+          type="number"
+          required={false}
         />
         <PropertyStatusDropdown form={form} />
         <PropertyInput
