@@ -12,7 +12,7 @@ import {
 import { useNavigate } from "react-router-dom";
 
 const menuItems = [
-  { title: "Dashboard", icon: Home, path: "/" },
+  { title: "Dashboard", icon: Home, path: "/dashboard" },
   { title: "Properties", icon: Building, path: "/properties" },
   { title: "Bookings", icon: Calendar, path: "/bookings" },
   { title: "Expenses", icon: Receipt, path: "/expenses" },
