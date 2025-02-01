@@ -34,8 +34,10 @@ export function AddInvoiceForm({ propertyId, tenantId, onSuccess }: AddInvoiceFo
         daily_rate: parseFloat(dailyRate),
         start_date: startDate.toISOString(),
         end_date: endDate.toISOString(),
-        due_date: endDate.toISOString(), // Set due date to end date
+        due_date: endDate.toISOString(),
         description,
+        amount: 0, // This will be calculated by the trigger
+        amount_paid: 0,
       })
 
       if (error) throw error
@@ -58,6 +60,11 @@ export function AddInvoiceForm({ propertyId, tenantId, onSuccess }: AddInvoiceFo
     e.preventDefault()
     setIsSubmitting(true)
     createInvoiceMutation.mutate()
+  }
+
+  const disabledDates = (date: Date) => {
+    if (!startDate) return false
+    return date < startDate
   }
 
   return (
@@ -90,7 +97,7 @@ export function AddInvoiceForm({ propertyId, tenantId, onSuccess }: AddInvoiceFo
           date={endDate}
           setDate={setEndDate}
           placeholder="Select end date"
-          disabled={(date) => startDate ? date < startDate : false}
+          minDate={startDate}
         />
       </div>
 
