@@ -5,6 +5,7 @@ export interface Invoice {
   property_id: string
   tenant_id: string
   amount: number
+  amount_paid: number
   due_date: string
   status: InvoiceStatus
   description?: string
@@ -12,10 +13,9 @@ export interface Invoice {
   updated_at: string
   daily_rate: number
   days_rented: number
-  amount_paid: number
   start_date?: string
   end_date?: string
-  properties?: {
+  properties: {
     name: string
   }
 }
