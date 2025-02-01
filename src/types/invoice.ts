@@ -15,4 +15,7 @@ export interface Invoice {
   amount_paid: number
   start_date?: string
   end_date?: string
+  properties?: {
+    name: string
+  }
 }

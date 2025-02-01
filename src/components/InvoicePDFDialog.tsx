@@ -6,14 +6,16 @@ import { InvoicePDF } from "@/components/InvoicePDF"
 import type { Invoice } from "@/types/invoice"
 
 interface InvoicePDFDialogProps {
-  invoice: Invoice & {
-    properties: {
-      name: string;
-    };
-  }
+  invoice: Invoice
 }
 
 export function InvoicePDFDialog({ invoice }: InvoicePDFDialogProps) {
+  // Ensure description is never undefined for InvoicePDF
+  const invoiceWithDefaults = {
+    ...invoice,
+    description: invoice.description || 'No description provided'
+  }
+
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -23,7 +25,7 @@ export function InvoicePDFDialog({ invoice }: InvoicePDFDialogProps) {
       </DialogTrigger>
       <DialogContent>
         <PDFDownloadLink
-          document={<InvoicePDF invoice={invoice} />}
+          document={<InvoicePDF invoice={invoiceWithDefaults} />}
           fileName={`invoice-${invoice.id}.pdf`}
         >
           {({ loading }) => (
