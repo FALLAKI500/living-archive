@@ -10,7 +10,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { PropertyForm } from "@/components/PropertyForm"
-import { Edit, MapPin, Trash } from "lucide-react"
+import { AddInvoiceForm } from "@/components/AddInvoiceForm"
+import { Edit, MapPin, Trash, Receipt } from "lucide-react"
 import { supabase } from "@/integrations/supabase/client"
 import { toast } from "sonner"
 import type { Property } from "@/types/property"
@@ -21,6 +22,7 @@ interface PropertyCardProps {
 
 export function PropertyCard({ property }: PropertyCardProps) {
   const [isDeleteLoading, setIsDeleteLoading] = useState(false)
+  const [isInvoiceDialogOpen, setIsInvoiceDialogOpen] = useState(false)
   const queryClient = useQueryClient()
 
   const deleteMutation = useMutation({
@@ -90,6 +92,23 @@ export function PropertyCard({ property }: PropertyCardProps) {
                     <DialogTitle>Edit Property</DialogTitle>
                   </DialogHeader>
                   <PropertyForm property={property} />
+                </DialogContent>
+              </Dialog>
+              <Dialog open={isInvoiceDialogOpen} onOpenChange={setIsInvoiceDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="icon">
+                    <Receipt className="h-4 w-4" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Create Invoice</DialogTitle>
+                  </DialogHeader>
+                  <AddInvoiceForm
+                    propertyId={property.id}
+                    tenantId="tenant-id" // This should be replaced with actual tenant ID
+                    onSuccess={() => setIsInvoiceDialogOpen(false)}
+                  />
                 </DialogContent>
               </Dialog>
               <Button
