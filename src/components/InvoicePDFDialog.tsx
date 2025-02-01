@@ -24,6 +24,8 @@ interface InvoicePDFDialogProps {
     };
     daily_rate: number;
     days_rented: number;
+    start_date?: string | null;
+    end_date?: string | null;
   };
 }
 
