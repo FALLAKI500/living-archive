@@ -79,7 +79,7 @@ export function PropertyCard({ property }: PropertyCardProps) {
         <div className="space-y-4">
           <div className="flex items-center text-muted-foreground">
             <MapPin className="mr-2 h-4 w-4" />
-            {property.location}
+            {property.address}{property.city ? `, ${property.city}` : ''}
           </div>
           <div className="space-y-2">
             <div className="flex gap-2">

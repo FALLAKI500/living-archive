@@ -15,7 +15,8 @@ import * as z from "zod"
 
 const propertySchema = z.object({
   name: z.string().min(1, "Name is required"),
-  location: z.string().min(1, "Location is required"),
+  address: z.string().min(1, "Address is required"),
+  city: z.string().optional(),
   daily_rate: z.number().min(0, "Daily rate must be a positive number"),
   monthly_rate: z.number().optional(),
   pricing_type: z.enum(["daily", "monthly"]),
@@ -36,7 +37,8 @@ export function PropertyForm({ property }: PropertyFormProps) {
     resolver: zodResolver(propertySchema),
     defaultValues: {
       name: property?.name ?? "",
-      location: property?.location ?? "",
+      address: property?.address ?? "",
+      city: property?.city ?? "",
       daily_rate: property?.daily_rate ?? 0,
       monthly_rate: property?.monthly_rate ?? 0,
       pricing_type: property?.pricing_type ?? "monthly",
@@ -107,9 +109,16 @@ export function PropertyForm({ property }: PropertyFormProps) {
         />
         <PropertyInput
           form={form}
-          name="location"
-          label="Location"
-          placeholder="Property location"
+          name="address"
+          label="Address"
+          placeholder="Property address"
+        />
+        <PropertyInput
+          form={form}
+          name="city"
+          label="City"
+          placeholder="Property city"
+          required={false}
         />
         <PropertyInput
           form={form}
