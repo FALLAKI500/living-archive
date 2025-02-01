@@ -1,11 +1,11 @@
-import { PDFDownloadLink } from "@react-pdf/renderer";
-import { Button } from "@/components/ui/button";
-import { FileDown } from "lucide-react";
-import { InvoicePDF } from "./InvoicePDF";
-import { Invoice } from "@/types/invoice";
+import { PDFDownloadLink } from "@react-pdf/renderer"
+import { Button } from "@/components/ui/button"
+import { FileDown } from "lucide-react"
+import { InvoicePDF } from "./InvoicePDF"
+import { Invoice } from "@/types/invoice"
 
 interface InvoicePDFDialogProps {
-  invoice: Invoice;
+  invoice: Invoice
 }
 
 export function InvoicePDFDialog({ invoice }: InvoicePDFDialogProps) {
@@ -27,5 +27,5 @@ export function InvoicePDFDialog({ invoice }: InvoicePDFDialogProps) {
         </Button>
       )}
     </PDFDownloadLink>
-  );
+  )
 }

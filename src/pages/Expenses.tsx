@@ -1,4 +1,5 @@
 import { Layout } from "@/components/Layout"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
 export default function Expenses() {
   return (
@@ -10,6 +11,15 @@ export default function Expenses() {
             Track and manage your property expenses
           </p>
         </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Expenses Overview</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p>Expenses tracking coming soon...</p>
+          </CardContent>
+        </Card>
       </div>
     </Layout>
   )
