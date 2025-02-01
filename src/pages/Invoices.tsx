@@ -4,6 +4,7 @@ import { Layout } from "@/components/Layout"
 import { Button } from "@/components/ui/button"
 import { InvoiceForm } from "@/components/InvoiceForm"
 import { PaymentDialog } from "@/components/PaymentDialog"
+import { InvoicePDFDialog } from "@/components/InvoicePDFDialog"
 import { Input } from "@/components/ui/input"
 import { DatePicker } from "@/components/ui/date-picker"
 import {
@@ -215,7 +216,7 @@ export default function Invoices() {
                 <TableHead>Due Date</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Description</TableHead>
-                <TableHead>Actions</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -237,14 +238,17 @@ export default function Invoices() {
                   </TableCell>
                   <TableCell>{invoice.description}</TableCell>
                   <TableCell>
-                    <PaymentDialog
-                      invoiceId={invoice.id}
-                      currentAmount={invoice.amount}
-                      amountPaid={invoice.amount_paid}
-                      onSuccess={() => {
-                        queryClient.invalidateQueries({ queryKey: ["invoices"] })
-                      }}
-                    />
+                    <div className="flex justify-end gap-2">
+                      <InvoicePDFDialog invoice={invoice} />
+                      <PaymentDialog
+                        invoiceId={invoice.id}
+                        currentAmount={invoice.amount}
+                        amountPaid={invoice.amount_paid}
+                        onSuccess={() => {
+                          queryClient.invalidateQueries({ queryKey: ["invoices"] })
+                        }}
+                      />
+                    </div>
                   </TableCell>
                 </TableRow>
               ))}
