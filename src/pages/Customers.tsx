@@ -1,10 +1,10 @@
 import { Layout } from "@/components/Layout"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { useState } from "react"
 import { ExportDialog } from "@/components/ExportDialog"
+import { CustomerCard } from "@/components/CustomerCard"
 
 export default function Customers() {
   const [searchQuery, setSearchQuery] = useState("")
@@ -12,12 +12,33 @@ export default function Customers() {
   const { data: customerStats, isLoading } = useQuery({
     queryKey: ["customer-statistics"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data: stats, error: statsError } = await supabase
         .rpc('get_customer_statistics')
 
-      if (error) throw error
-      return data
-    },
+      if (statsError) throw statsError
+
+      // Fetch upcoming bookings for each customer
+      const customersWithBookings = await Promise.all(
+        stats.map(async (customer) => {
+          const { data: bookings, error: bookingsError } = await supabase
+            .from('invoices')
+            .select('id, start_date')
+            .eq('tenant_id', customer.id)
+            .gte('start_date', new Date().toISOString())
+            .order('start_date', { ascending: true })
+            .limit(5)
+
+          if (bookingsError) throw bookingsError
+
+          return {
+            ...customer,
+            upcomingBookings: bookings || []
+          }
+        })
+      )
+
+      return customersWithBookings
+    }
   })
 
   const filteredCustomers = customerStats?.filter(customer => {
@@ -47,47 +68,27 @@ export default function Customers() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
-          <ExportDialog customers={filteredCustomers || []} />
+          <ExportDialog data={filteredCustomers || []} />
         </div>
 
         {isLoading ? (
           <p>Loading customer statistics...</p>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {filteredCustomers?.map((stat) => (
-              <Card key={stat.id}>
-                <CardHeader>
-                  <CardTitle>{stat.full_name || "Unnamed Customer"}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <p className="text-sm text-muted-foreground">
-                    {stat.company_name && `Company: ${stat.company_name}`}
-                  </p>
-                  {stat.phone && (
-                    <p className="text-sm text-muted-foreground">
-                      Phone: {stat.phone}
-                    </p>
-                  )}
-                  {stat.city && (
-                    <p className="text-sm text-muted-foreground">
-                      City: {stat.city}
-                    </p>
-                  )}
-                  <div className="pt-4 border-t">
-                    <p className="text-sm font-medium">
-                      Total Bookings: {stat.total_bookings}
-                    </p>
-                    <p className="text-sm font-medium">
-                      Total Spent: {Number(stat.total_spent).toLocaleString()} MAD
-                    </p>
-                    {stat.last_booking_date && (
-                      <p className="text-sm text-muted-foreground">
-                        Last Booking: {new Date(stat.last_booking_date).toLocaleDateString()}
-                      </p>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+            {filteredCustomers?.map((customer) => (
+              <CustomerCard
+                key={customer.id}
+                id={customer.id}
+                fullName={customer.full_name || "Unnamed Customer"}
+                phone={customer.phone}
+                city={customer.city}
+                companyName={customer.company_name}
+                totalBookings={Number(customer.total_bookings)}
+                totalSpent={Number(customer.total_spent)}
+                lastBookingDate={customer.last_booking_date}
+                notes={customer.notes}
+                upcomingBookings={customer.upcomingBookings}
+              />
             ))}
           </div>
         )}
