@@ -7,10 +7,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Line } from "react-chartjs-2";
 import { Chart, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from "chart.js";
 
-// تسجيل المكتبات للرسم البياني 📊
+// 📊 تسجيل المكتبات للرسم البياني
 Chart.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 export default function Analytics() {
+  // 📌 جلب بيانات الإيرادات الشهرية
   const { data: monthlyRevenue, isLoading } = useQuery({
     queryKey: ["monthly-revenue"],
     queryFn: async () => {
@@ -21,18 +22,18 @@ export default function Analytics() {
 
       if (error) throw error;
 
-      console.log("📊 Monthly Revenue Data:", data || "No Data"); // ✅ التأكد من البيانات المسترجعة
+      console.log("📊 Monthly Revenue Data:", data || "No Data"); // ✅ التأكد من أن البيانات مسترجعة
       return data || [];
     },
   });
 
-  // تصفية البيانات وإزالة أي قيمة `null`
-  const revenueData = monthlyRevenue?.filter((item) => item.month) || [];
+  // ✅ التأكد من أن البيانات موجودة
+  const revenueData = monthlyRevenue || [];
 
-  // تجهيز البيانات للرسم البياني 📊
+  // 📈 تجهيز البيانات للرسم البياني
   const chartData = {
     labels: revenueData.map((item) =>
-      new Date(item.month).toLocaleDateString("en-US", { month: "short", year: "numeric" })
+      item.month ? new Date(item.month).toLocaleDateString("en-US", { month: "short", year: "numeric" }) : "Unknown"
     ),
     datasets: [
       {
@@ -55,6 +56,7 @@ export default function Analytics() {
         </div>
 
         {isLoading ? (
+          // ⏳ عرض الـ Skeleton أثناء التحميل
           <div className="space-y-6">
             <Skeleton className="h-64 w-full" />
             <Skeleton className="h-12 w-3/4 mx-auto" />
@@ -62,7 +64,7 @@ export default function Analytics() {
           </div>
         ) : (
           <>
-            {/* 📈 الرسم البياني للإيرادات */}
+            {/* 📊 الرسم البياني للإيرادات */}
             <Card>
               <CardHeader>
                 <CardTitle>📊 Revenue Trend</CardTitle>
@@ -86,19 +88,19 @@ export default function Analytics() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>📅 Month</TableHead>
-                        <TableHead>💰 Total Revenue (MAD)</TableHead>
-                        <TableHead>📝 Invoices</TableHead>
-                        <TableHead>💵 Payments</TableHead>
+                        <TableHead>Month</TableHead>
+                        <TableHead>Total Revenue (MAD)</TableHead>
+                        <TableHead>Invoices</TableHead>
+                        <TableHead>Payments</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {revenueData.map((row, index) => (
                         <TableRow key={index}>
                           <TableCell>
-                            {new Date(row.month).toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+                            {row.month ? new Date(row.month).toLocaleDateString("en-US", { month: "long", year: "numeric" }) : "Unknown"}
                           </TableCell>
-                          <TableCell className="font-semibold">{row.total_revenue?.toLocaleString() || "0"} MAD</TableCell>
+                          <TableCell className="font-semibold">{row.total_revenue ? row.total_revenue.toLocaleString() : "0"} MAD</TableCell>
                           <TableCell>{row.invoice_count || 0}</TableCell>
                           <TableCell>{row.payment_count || 0}</TableCell>
                         </TableRow>
