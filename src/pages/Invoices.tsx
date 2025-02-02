@@ -35,6 +35,7 @@ import { supabase } from "@/integrations/supabase/client"
 import { format } from "date-fns"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
+import { Invoice } from "@/types/invoice"
 
 interface Invoice {
   id: string
@@ -72,7 +73,12 @@ export default function Invoices() {
         .order("created_at", { ascending: false })
 
       if (error) throw error
-      return data as Invoice[]
+      
+      // Add the required updated_at field with a default value if not present
+      return (data as Invoice[]).map(invoice => ({
+        ...invoice,
+        updated_at: invoice.updated_at || new Date().toISOString()
+      }))
     },
   })
 
