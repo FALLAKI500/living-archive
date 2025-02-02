@@ -2,8 +2,13 @@ import { Layout } from "@/components/Layout"
 import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { useState } from "react"
+import { ExportDialog } from "@/components/ExportDialog"
 
 export default function Customers() {
+  const [searchQuery, setSearchQuery] = useState("")
+  
   const { data: customerStats, isLoading } = useQuery({
     queryKey: ["customer-statistics"],
     queryFn: async () => {
@@ -13,6 +18,16 @@ export default function Customers() {
       if (error) throw error
       return data
     },
+  })
+
+  const filteredCustomers = customerStats?.filter(customer => {
+    const searchLower = searchQuery.toLowerCase()
+    return (
+      !searchQuery ||
+      customer.full_name?.toLowerCase().includes(searchLower) ||
+      customer.phone?.toLowerCase().includes(searchLower) ||
+      customer.city?.toLowerCase().includes(searchLower)
+    )
   })
 
   return (
@@ -25,11 +40,21 @@ export default function Customers() {
           </p>
         </div>
 
+        <div className="flex items-center justify-between">
+          <Input
+            placeholder="Search by name, phone, or city..."
+            className="max-w-sm"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          <ExportDialog customers={filteredCustomers || []} />
+        </div>
+
         {isLoading ? (
           <p>Loading customer statistics...</p>
         ) : (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {customerStats?.map((stat) => (
+            {filteredCustomers?.map((stat) => (
               <Card key={stat.id}>
                 <CardHeader>
                   <CardTitle>{stat.full_name || "Unnamed Customer"}</CardTitle>
