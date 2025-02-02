@@ -1,12 +1,14 @@
-import { Layout } from "@/components/Layout"
-import { useQuery } from "@tanstack/react-query"
-import { supabase } from "@/integrations/supabase/client"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Line } from "react-chartjs-2"
-import { Chart, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from "chart.js"
+import { Layout } from "@/components/Layout";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Line } from "react-chartjs-2";
+import { Chart, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from "chart.js";
+import { Skeleton } from "@/components/ui/skeleton";
 
-Chart.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend)
+// تسجيل المكتبات للرسم البياني
+Chart.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 export default function Analytics() {
   const { data: monthlyRevenue, isLoading } = useQuery({
@@ -15,16 +17,19 @@ export default function Analytics() {
       const { data, error } = await supabase
         .from("monthly_revenue_summary")
         .select("*")
-        .order("month", { ascending: true })
+        .order("month", { ascending: true });
 
-      if (error) throw error
-      return data || []
+      if (error) throw error;
+      console.log("Monthly Revenue Data:", data); // ✅ تأكد أن البيانات تُسترجع
+      return data || [];
     },
-  })
+  });
 
-  // إعداد البيانات للعرض في الرسم البياني
+  // تجهيز البيانات للرسم البياني 📊
   const chartData = {
-    labels: monthlyRevenue?.map((item) => new Date(item.month).toLocaleDateString("en-US", { month: "short", year: "numeric" })),
+    labels: monthlyRevenue?.map((item) =>
+      new Date(item.month).toLocaleDateString("en-US", { month: "short", year: "numeric" })
+    ),
     datasets: [
       {
         label: "Total Revenue (MAD)",
@@ -35,20 +40,21 @@ export default function Analytics() {
         tension: 0.4,
       },
     ],
-  }
+  };
 
   return (
     <Layout>
       <div className="space-y-8">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">📊 Analytics</h1>
-          <p className="text-muted-foreground">
-            View your property management analytics
-          </p>
+          <p className="text-muted-foreground">View your property management analytics</p>
         </div>
 
         {isLoading ? (
-          <p>Loading analytics...</p>
+          <div className="space-y-4">
+            <Skeleton className="h-64 w-full" />
+            <Skeleton className="h-12 w-full" />
+          </div>
         ) : (
           <>
             {/* 📈 الرسم البياني للإيرادات */}
@@ -56,8 +62,8 @@ export default function Analytics() {
               <CardHeader>
                 <CardTitle>📊 Revenue Trend</CardTitle>
               </CardHeader>
-              <CardContent>
-                <Line data={chartData} options={{ responsive: true, maintainAspectRatio: false }} height={300} />
+              <CardContent className="h-[300px]">
+                <Line data={chartData} options={{ responsive: true, maintainAspectRatio: false }} />
               </CardContent>
             </Card>
 
@@ -79,7 +85,9 @@ export default function Analytics() {
                   <TableBody>
                     {monthlyRevenue?.map((row, index) => (
                       <TableRow key={index}>
-                        <TableCell>{new Date(row.month).toLocaleDateString("en-US", { month: "long", year: "numeric" })}</TableCell>
+                        <TableCell>
+                          {new Date(row.month).toLocaleDateString("en-US", { month: "long", year: "numeric" })}
+                        </TableCell>
                         <TableCell className="font-semibold">{row.total_revenue.toLocaleString()} MAD</TableCell>
                         <TableCell>{row.invoice_count}</TableCell>
                         <TableCell>{row.payment_count}</TableCell>
@@ -93,5 +101,5 @@ export default function Analytics() {
         )}
       </div>
     </Layout>
-  )
+  );
 }
