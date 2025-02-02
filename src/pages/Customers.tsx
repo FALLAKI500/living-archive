@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query"
 import { supabase } from "@/integrations/supabase/client"
 import { Input } from "@/components/ui/input"
 import { useState } from "react"
-import { ExportDialog } from "@/components/ExportDialog"
+import { CustomerExportDialog } from "@/components/CustomerExportDialog"
 import { CustomerCard } from "@/components/CustomerCard"
 
 export default function Customers() {
@@ -68,7 +68,7 @@ export default function Customers() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
-          <ExportDialog data={filteredCustomers || []} />
+          <CustomerExportDialog customers={filteredCustomers || []} />
         </div>
 
         {isLoading ? (
@@ -86,7 +86,6 @@ export default function Customers() {
                 totalBookings={Number(customer.total_bookings)}
                 totalSpent={Number(customer.total_spent)}
                 lastBookingDate={customer.last_booking_date}
-                notes={customer.notes}
                 upcomingBookings={customer.upcomingBookings}
               />
             ))}

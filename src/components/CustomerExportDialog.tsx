@@ -23,7 +23,7 @@ interface CustomerExportDialogProps {
   }[]
 }
 
-export function ExportDialog({ customers }: CustomerExportDialogProps) {
+export function CustomerExportDialog({ customers }: CustomerExportDialogProps) {
   const handleExportToExcel = () => {
     try {
       exportCustomersToExcel(customers)
