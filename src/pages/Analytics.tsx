@@ -20,7 +20,7 @@ export default function Analytics() {
         .order("month", { ascending: true });
 
       if (error) throw error;
-      
+
       console.log("📊 Monthly Revenue Data:", data || "No Data"); // ✅ التأكد من البيانات المسترجعة
       return data || [];
     },
