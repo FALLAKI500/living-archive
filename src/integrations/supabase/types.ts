@@ -240,30 +240,36 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          city: string | null
           company_name: string | null
           created_at: string | null
           full_name: string | null
           id: string
+          notes: string[] | null
           notifications_enabled: boolean | null
           phone: string | null
           updated_at: string | null
         }
         Insert: {
           avatar_url?: string | null
+          city?: string | null
           company_name?: string | null
           created_at?: string | null
           full_name?: string | null
           id: string
+          notes?: string[] | null
           notifications_enabled?: boolean | null
           phone?: string | null
           updated_at?: string | null
         }
         Update: {
           avatar_url?: string | null
+          city?: string | null
           company_name?: string | null
           created_at?: string | null
           full_name?: string | null
           id?: string
+          notes?: string[] | null
           notifications_enabled?: boolean | null
           phone?: string | null
           updated_at?: string | null
@@ -320,6 +326,19 @@ export type Database = {
       }
     }
     Views: {
+      customer_statistics: {
+        Row: {
+          city: string | null
+          company_name: string | null
+          full_name: string | null
+          id: string | null
+          last_booking_date: string | null
+          phone: string | null
+          total_bookings: number | null
+          total_spent: number | null
+        }
+        Relationships: []
+      }
       monthly_revenue_summary: {
         Row: {
           invoice_count: number | null
@@ -342,7 +361,19 @@ export type Database = {
       }
     }
     Functions: {
-      [_ in never]: never
+      get_customer_statistics: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          id: string
+          full_name: string
+          phone: string
+          city: string
+          company_name: string
+          total_bookings: number
+          total_spent: number
+          last_booking_date: string
+        }[]
+      }
     }
     Enums: {
       expense_category:
