@@ -1,8 +1,8 @@
 import { lazy, Suspense } from "react"
 import { Skeleton } from "@/components/ui/skeleton"
 
-const CustomerSpendingChart = lazy(() => import("../CustomerSpendingChart"))
-const CustomerBookingsChart = lazy(() => import("../CustomerBookingsChart"))
+const CustomerSpendingChart = lazy(() => import("../../components/CustomerSpendingChart").then(module => ({ default: module.default })))
+const CustomerBookingsChart = lazy(() => import("../../components/CustomerBookingsChart").then(module => ({ default: module.default })))
 
 interface CustomerChartsProps {
   customerId: string
