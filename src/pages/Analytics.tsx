@@ -26,13 +26,13 @@ export default function Analytics() {
     },
   });
 
-  // التأكد من وجود بيانات قبل التعامل معها
-  const revenueData = monthlyRevenue || [];
+  // تصفية البيانات وإزالة أي قيمة `null`
+  const revenueData = monthlyRevenue?.filter((item) => item.month) || [];
 
   // تجهيز البيانات للرسم البياني 📊
   const chartData = {
     labels: revenueData.map((item) =>
-      item.month ? new Date(item.month).toLocaleDateString("en-US", { month: "short", year: "numeric" }) : "Unknown"
+      new Date(item.month).toLocaleDateString("en-US", { month: "short", year: "numeric" })
     ),
     datasets: [
       {
@@ -71,7 +71,7 @@ export default function Analytics() {
                 {revenueData.length > 0 ? (
                   <Line data={chartData} options={{ responsive: true, maintainAspectRatio: false }} />
                 ) : (
-                  <p className="text-center text-gray-500">No data available</p>
+                  <p className="text-center text-gray-500">📉 No data available</p>
                 )}
               </CardContent>
             </Card>
@@ -86,19 +86,19 @@ export default function Analytics() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Month</TableHead>
-                        <TableHead>Total Revenue (MAD)</TableHead>
-                        <TableHead>Invoices</TableHead>
-                        <TableHead>Payments</TableHead>
+                        <TableHead>📅 Month</TableHead>
+                        <TableHead>💰 Total Revenue (MAD)</TableHead>
+                        <TableHead>📝 Invoices</TableHead>
+                        <TableHead>💵 Payments</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {revenueData.map((row, index) => (
                         <TableRow key={index}>
                           <TableCell>
-                            {row.month ? new Date(row.month).toLocaleDateString("en-US", { month: "long", year: "numeric" }) : "Unknown"}
+                            {new Date(row.month).toLocaleDateString("en-US", { month: "long", year: "numeric" })}
                           </TableCell>
-                          <TableCell className="font-semibold">{row.total_revenue ? row.total_revenue.toLocaleString() : "0"} MAD</TableCell>
+                          <TableCell className="font-semibold">{row.total_revenue?.toLocaleString() || "0"} MAD</TableCell>
                           <TableCell>{row.invoice_count || 0}</TableCell>
                           <TableCell>{row.payment_count || 0}</TableCell>
                         </TableRow>
@@ -106,7 +106,7 @@ export default function Analytics() {
                     </TableBody>
                   </Table>
                 ) : (
-                  <p className="text-center text-gray-500">No revenue data available</p>
+                  <p className="text-center text-gray-500">📉 No revenue data available</p>
                 )}
               </CardContent>
             </Card>
