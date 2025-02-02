@@ -7,12 +7,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Line } from "react-chartjs-2";
 import { Chart, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from "chart.js";
 
-// 📊 تسجيل المكتبات للرسم البياني
+// تسجيل المكتبات للرسم البياني 📊
 Chart.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 export default function Analytics() {
-  // 📌 جلب بيانات الإيرادات الشهرية
-  const { data: monthlyRevenue, isLoading } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: ["monthly-revenue"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -20,17 +19,30 @@ export default function Analytics() {
         .select("*")
         .order("month", { ascending: true });
 
-      if (error) throw error;
+      if (error) {
+        console.error("❌ Supabase Error:", error);
+        throw error;
+      }
 
-      console.log("📊 Monthly Revenue Data:", data || "No Data"); // ✅ التأكد من أن البيانات مسترجعة
+      console.log("✅ RAW Data from Supabase:", data || "No Data"); // فحص البيانات المسترجعة
       return data || [];
     },
   });
 
-  // ✅ التأكد من أن البيانات موجودة
-  const revenueData = monthlyRevenue || [];
+  if (error) {
+    return (
+      <Layout>
+        <div className="text-center text-red-500">
+          ❌ Failed to load analytics. Please check your Supabase connection.
+        </div>
+      </Layout>
+    );
+  }
 
-  // 📈 تجهيز البيانات للرسم البياني
+  // التأكد من وجود بيانات
+  const revenueData = data || [];
+
+  // تجهيز البيانات للرسم البياني 📊
   const chartData = {
     labels: revenueData.map((item) =>
       item.month ? new Date(item.month).toLocaleDateString("en-US", { month: "short", year: "numeric" }) : "Unknown"
@@ -56,7 +68,6 @@ export default function Analytics() {
         </div>
 
         {isLoading ? (
-          // ⏳ عرض الـ Skeleton أثناء التحميل
           <div className="space-y-6">
             <Skeleton className="h-64 w-full" />
             <Skeleton className="h-12 w-3/4 mx-auto" />
@@ -64,7 +75,7 @@ export default function Analytics() {
           </div>
         ) : (
           <>
-            {/* 📊 الرسم البياني للإيرادات */}
+            {/* 📈 الرسم البياني للإيرادات */}
             <Card>
               <CardHeader>
                 <CardTitle>📊 Revenue Trend</CardTitle>
@@ -73,7 +84,7 @@ export default function Analytics() {
                 {revenueData.length > 0 ? (
                   <Line data={chartData} options={{ responsive: true, maintainAspectRatio: false }} />
                 ) : (
-                  <p className="text-center text-gray-500">📉 No data available</p>
+                  <p className="text-center text-gray-500">No data available</p>
                 )}
               </CardContent>
             </Card>
@@ -98,9 +109,13 @@ export default function Analytics() {
                       {revenueData.map((row, index) => (
                         <TableRow key={index}>
                           <TableCell>
-                            {row.month ? new Date(row.month).toLocaleDateString("en-US", { month: "long", year: "numeric" }) : "Unknown"}
+                            {row.month
+                              ? new Date(row.month).toLocaleDateString("en-US", { month: "long", year: "numeric" })
+                              : "Unknown"}
                           </TableCell>
-                          <TableCell className="font-semibold">{row.total_revenue ? row.total_revenue.toLocaleString() : "0"} MAD</TableCell>
+                          <TableCell className="font-semibold">
+                            {row.total_revenue ? row.total_revenue.toLocaleString() : "0"} MAD
+                          </TableCell>
                           <TableCell>{row.invoice_count || 0}</TableCell>
                           <TableCell>{row.payment_count || 0}</TableCell>
                         </TableRow>
@@ -108,7 +123,7 @@ export default function Analytics() {
                     </TableBody>
                   </Table>
                 ) : (
-                  <p className="text-center text-gray-500">📉 No revenue data available</p>
+                  <p className="text-center text-gray-500">No revenue data available</p>
                 )}
               </CardContent>
             </Card>
