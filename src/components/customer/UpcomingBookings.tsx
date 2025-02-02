@@ -1,5 +1,7 @@
+import { memo } from "react"
 import { Badge } from "@/components/ui/badge"
 import { format, isThisWeek, isToday } from "date-fns"
+import { motion } from "framer-motion"
 
 interface UpcomingBookingsProps {
   bookings: Array<{
@@ -8,7 +10,7 @@ interface UpcomingBookingsProps {
   }>
 }
 
-export function UpcomingBookings({ bookings }: UpcomingBookingsProps) {
+export const UpcomingBookings = memo(({ bookings }: UpcomingBookingsProps) => {
   const getBookingUrgencyColor = (date: string) => {
     if (isToday(new Date(date))) return "bg-red-500"
     if (isThisWeek(new Date(date))) return "bg-orange-500"
@@ -18,11 +20,21 @@ export function UpcomingBookings({ bookings }: UpcomingBookingsProps) {
   if (!bookings.length) return null
 
   return (
-    <div className="pt-4 border-t">
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+      className="pt-4 border-t"
+    >
       <h3 className="font-medium mb-2">Upcoming Bookings</h3>
       <div className="space-y-2">
         {bookings.map((booking) => (
-          <div key={booking.id} className="flex items-center justify-between">
+          <motion.div 
+            key={booking.id} 
+            className="flex items-center justify-between"
+            whileHover={{ scale: 1.02 }}
+            transition={{ duration: 0.2 }}
+          >
             <span className="text-sm">
               {format(new Date(booking.start_date), 'MMM dd, yyyy')}
             </span>
@@ -33,9 +45,11 @@ export function UpcomingBookings({ bookings }: UpcomingBookingsProps) {
                 ? "This Week"
                 : "Upcoming"}
             </Badge>
-          </div>
+          </motion.div>
         ))}
       </div>
-    </div>
+    </motion.div>
   )
-}
+})
+
+UpcomingBookings.displayName = "UpcomingBookings"
