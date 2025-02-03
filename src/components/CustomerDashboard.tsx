@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast"
 import { DataTable } from "@/components/ui/data-table"
 import { Button } from "@/components/ui/button"
 import { addDays } from "date-fns"
+import { DateRange } from "react-day-picker"
 
 interface CustomerData {
   id: string
@@ -28,7 +29,7 @@ interface CustomerData {
 export function CustomerDashboard() {
   const { toast } = useToast()
   const [searchQuery, setSearchQuery] = useState("")
-  const [dateRange, setDateRange] = useState({
+  const [dateRange, setDateRange] = useState<DateRange>({
     from: addDays(new Date(), -30),
     to: new Date(),
   })
@@ -36,9 +37,9 @@ export function CustomerDashboard() {
   const [minSpent, setMinSpent] = useState<number | null>(null)
 
   const { data: customers, isLoading } = useQuery({
-    queryKey: ["customers-advanced", dateRange, statusFilter, minSpent],
+    queryKey: ["customers", dateRange, statusFilter, minSpent],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("get_customer_advanced_statistics", {
+      const { data, error } = await supabase.rpc("get_customer_statistics", {
         start_date: dateRange.from?.toISOString(),
         end_date: dateRange.to?.toISOString(),
         min_spent: minSpent,

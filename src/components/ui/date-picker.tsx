@@ -12,14 +12,16 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
-import { DateRange } from "react-day-picker"
 
-interface DatePickerProps {
+interface DatePickerWithRangeProps {
   date: DateRange | undefined
-  setDate: React.Dispatch<React.SetStateAction<DateRange | undefined>>
+  setDate: (date: DateRange | undefined) => void
 }
 
-export function DatePicker({ date, setDate }: DatePickerProps) {
+export function DatePickerWithRange({
+  date,
+  setDate,
+}: DatePickerWithRangeProps) {
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -55,5 +57,3 @@ export function DatePicker({ date, setDate }: DatePickerProps) {
     </Popover>
   )
 }
-
-export default DatePicker;
