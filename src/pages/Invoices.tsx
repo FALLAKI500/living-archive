@@ -35,7 +35,7 @@ import { supabase } from "@/integrations/supabase/client"
 import { format } from "date-fns"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
-import type { Invoice } from "@/types/invoice"
+import { Invoice } from "@/types/invoice"
 
 interface Invoice {
   id: string

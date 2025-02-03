@@ -1,21 +1,20 @@
-import { useState, useCallback, memo } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
 import { supabase } from "@/integrations/supabase/client"
-import { motion, AnimatePresence } from "framer-motion"
 
 interface CustomerNotesProps {
   customerId: string
   initialNotes: string[]
 }
 
-export const CustomerNotes = memo(({ customerId, initialNotes }: CustomerNotesProps) => {
+export function CustomerNotes({ customerId, initialNotes }: CustomerNotesProps) {
   const [newNote, setNewNote] = useState("")
   const [customerNotes, setCustomerNotes] = useState<string[]>(initialNotes)
   const { toast } = useToast()
 
-  const addNote = useCallback(async () => {
+  const addNote = async () => {
     if (!newNote.trim()) return
 
     try {
@@ -42,9 +41,9 @@ export const CustomerNotes = memo(({ customerId, initialNotes }: CustomerNotesPr
         variant: "destructive",
       })
     }
-  }, [newNote, customerNotes, customerId, toast])
+  }
 
-  const deleteNote = useCallback(async (index: number) => {
+  const deleteNote = async (index: number) => {
     try {
       const newNotes = customerNotes.filter((_, i) => i !== index)
       const { error } = await supabase
@@ -69,32 +68,24 @@ export const CustomerNotes = memo(({ customerId, initialNotes }: CustomerNotesPr
         variant: "destructive",
       })
     }
-  }, [customerNotes, customerId, toast])
+  }
 
   return (
     <div className="pt-4 border-t">
       <h3 className="font-medium mb-2">Notes</h3>
       <div className="space-y-2">
-        <AnimatePresence>
-          {customerNotes.map((note, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              className="flex items-start justify-between gap-2 p-2 bg-muted rounded-md"
+        {customerNotes.map((note, index) => (
+          <div key={index} className="flex items-start justify-between gap-2 p-2 bg-muted rounded-md">
+            <p className="text-sm flex-1">{note}</p>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => deleteNote(index)}
             >
-              <p className="text-sm flex-1">{note}</p>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => deleteNote(index)}
-              >
-                Delete
-              </Button>
-            </motion.div>
-          ))}
-        </AnimatePresence>
+              Delete
+            </Button>
+          </div>
+        ))}
         <div className="flex gap-2">
           <Input
             placeholder="Add a note..."
@@ -107,6 +98,4 @@ export const CustomerNotes = memo(({ customerId, initialNotes }: CustomerNotesPr
       </div>
     </div>
   )
-})
-
-CustomerNotes.displayName = "CustomerNotes"
+}

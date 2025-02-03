@@ -1,6 +1,6 @@
+import { PDFDownloadLink } from "@react-pdf/renderer"
 import { Button } from "@/components/ui/button"
 import { FileDown } from "lucide-react"
-import { PDFDownloadLink } from "@react-pdf/renderer"
 import { InvoicePDF } from "./InvoicePDF"
 import { Invoice } from "@/types/invoice"
 
@@ -9,6 +9,7 @@ interface InvoicePDFDialogProps {
 }
 
 export function InvoicePDFDialog({ invoice }: InvoicePDFDialogProps) {
+  // Ensure required properties are never undefined
   const invoiceWithDefaults = {
     ...invoice,
     description: invoice.description || 'No description provided',

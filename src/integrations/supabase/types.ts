@@ -9,33 +9,6 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      customers: {
-        Row: {
-          city: string | null
-          created_at: string | null
-          email: string | null
-          id: string
-          name: string
-          phone: string | null
-        }
-        Insert: {
-          city?: string | null
-          created_at?: string | null
-          email?: string | null
-          id: string
-          name: string
-          phone?: string | null
-        }
-        Update: {
-          city?: string | null
-          created_at?: string | null
-          email?: string | null
-          id?: string
-          name?: string
-          phone?: string | null
-        }
-        Relationships: []
-      }
       email_logs: {
         Row: {
           email_type: string
@@ -351,29 +324,21 @@ export type Database = {
         }
         Relationships: []
       }
-      revenue_update_logs: {
+    }
+    Views: {
+      customer_statistics: {
         Row: {
-          id: number
-          invoice_count: number | null
-          total_revenue: number | null
-          update_time: string | null
-        }
-        Insert: {
-          id?: number
-          invoice_count?: number | null
-          total_revenue?: number | null
-          update_time?: string | null
-        }
-        Update: {
-          id?: number
-          invoice_count?: number | null
-          total_revenue?: number | null
-          update_time?: string | null
+          city: string | null
+          company_name: string | null
+          full_name: string | null
+          id: string | null
+          last_booking_date: string | null
+          phone: string | null
+          total_bookings: number | null
+          total_spent: number | null
         }
         Relationships: []
       }
-    }
-    Views: {
       monthly_revenue_summary: {
         Row: {
           invoice_count: number | null
@@ -408,10 +373,6 @@ export type Database = {
           total_spent: number
           last_booking_date: string
         }[]
-      }
-      update_monthly_revenue_summary: {
-        Args: Record<PropertyKey, never>
-        Returns: undefined
       }
     }
     Enums: {
