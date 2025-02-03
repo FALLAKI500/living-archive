@@ -31,6 +31,8 @@ import { toast } from "sonner"
 import { supabase } from "@/integrations/supabase/client"
 import { DatePicker } from "@/components/ui/date-picker"
 
+import { Expense, ExpenseCategory } from "@/types/expense"
+
 type Expense = {
   id: string
   amount: number
@@ -60,19 +62,19 @@ export default function Expenses() {
     },
   })
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault()
     setIsSubmitting(true)
 
     try {
       const formData = new FormData(e.currentTarget)
-      const expenseData = {
+      const expenseData: Expense = {
         amount: Number(formData.get("amount")),
-        category: formData.get("category"),
-        description: formData.get("description"),
-        date: formData.get("date"),
-        payment_method: formData.get("payment_method"),
-        property_id: formData.get("property_id") || null,
+        category: formData.get("category") as ExpenseCategory,
+        description: formData.get("description") as string,
+        date: formData.get("date") as string,
+        payment_method: formData.get("payment_method") as string,
+        property_id: formData.get("property_id") as string || null,
       }
 
       const { error } = await supabase.from("expenses").insert([expenseData])
