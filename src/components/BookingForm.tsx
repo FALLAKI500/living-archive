@@ -10,36 +10,29 @@ export default function BookingForm({ onClose }) {
   const [customers, setCustomers] = useState([]);
   const [selectedProperty, setSelectedProperty] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState("");
+  const [newCustomerName, setNewCustomerName] = useState("");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [totalPrice, setTotalPrice] = useState(0);
   const [loading, setLoading] = useState(false);
-
-  // لإضافة عميل جديد
-  const [showAddCustomerModal, setShowAddCustomerModal] = useState(false);
-  const [newCustomerName, setNewCustomerName] = useState("");
-  const [newCustomerPhone, setNewCustomerPhone] = useState("");
 
   useEffect(() => {
     fetchProperties();
     fetchCustomers();
   }, []);
 
-  // جلب قائمة العقارات
   const fetchProperties = async () => {
     const { data, error } = await supabase.from("properties").select("*");
     if (error) console.error("Error fetching properties:", error);
     else setProperties(data || []);
   };
 
-  // جلب قائمة العملاء
   const fetchCustomers = async () => {
     const { data, error } = await supabase.from("customers").select("*");
     if (error) console.error("Error fetching customers:", error);
     else setCustomers(data || []);
   };
 
-  // حساب السعر الإجمالي بناءً على عدد الأيام
   const calculateTotalPrice = () => {
     if (!startDate || !endDate || !selectedProperty) return;
     const start = new Date(startDate);
@@ -53,7 +46,24 @@ export default function BookingForm({ onClose }) {
     calculateTotalPrice();
   }, [startDate, endDate, selectedProperty]);
 
-  // إنشاء الحجز مع تمرير معرف العميل
+  const handleAddCustomer = async () => {
+    if (!newCustomerName) {
+      toast({ title: "Error", description: "Customer name is required", status: "error" });
+      return;
+    }
+    setLoading(true);
+    const { data, error } = await supabase.from("customers").insert([{ name: newCustomerName }]).select();
+    setLoading(false);
+    if (error) {
+      toast({ title: "Error", description: error.message, status: "error" });
+    } else {
+      toast({ title: "Success", description: "Customer added!", status: "success" });
+      setCustomers([...customers, ...data]);
+      setSelectedCustomer(data[0].id);
+      setNewCustomerName("");
+    }
+  };
+
   const handleBooking = async () => {
     if (!selectedProperty || !selectedCustomer || !startDate || !endDate) {
       toast({ title: "Error", description: "All fields are required", status: "error" });
@@ -63,7 +73,7 @@ export default function BookingForm({ onClose }) {
     const { data, error } = await supabase.from("bookings").insert([
       {
         property_id: selectedProperty,
-        customer_id: selectedCustomer, // ✅ تخزين معرف العميل في قاعدة البيانات
+        customer_id: selectedCustomer,
         start_date: startDate,
         end_date: endDate,
         total_price: totalPrice,
@@ -78,33 +88,11 @@ export default function BookingForm({ onClose }) {
     }
   };
 
-  // إضافة عميل جديد
-  const handleAddCustomer = async () => {
-    if (!newCustomerName || !newCustomerPhone) {
-      toast({ title: "Error", description: "Please enter customer name and phone number", status: "error" });
-      return;
-    }
-
-    const { data, error } = await supabase.from("customers").insert([
-      { name: newCustomerName, phone: newCustomerPhone }
-    ]).select();
-
-    if (error) {
-      console.error("Error adding customer:", error);
-      toast({ title: "Error", description: error.message, status: "error" });
-    } else {
-      setCustomers([...customers, ...data]); // تحديث قائمة العملاء
-      setSelectedCustomer(data[0].id); // تحديد العميل الجديد تلقائيًا
-      setShowAddCustomerModal(false); // إغلاق النموذج
-      toast({ title: "Success", description: "New customer added!", status: "success" });
-    }
-  };
-
   return (
     <div className="space-y-4">
       <h2 className="text-xl font-bold">Create New Booking</h2>
-
-      {/* ✅ اختيار العقار */}
+      
+      {/* اختيار العقار */}
       <Select value={selectedProperty} onChange={setSelectedProperty} placeholder="Choose a property">
         {properties.map((property) => (
           <SelectItem key={property.id} value={property.id}>
@@ -113,19 +101,22 @@ export default function BookingForm({ onClose }) {
         ))}
       </Select>
 
-      {/* ✅ اختيار العميل */}
+      {/* اختيار العميل */}
       <Select value={selectedCustomer} onChange={setSelectedCustomer} placeholder="Choose a customer">
         {customers.map((customer) => (
-          <SelectItem key={customer.id} value={customer.id}>
-            {customer.name} - {customer.phone}
-          </SelectItem>
+          <SelectItem key={customer.id} value={customer.id}>{customer.name}</SelectItem>
         ))}
       </Select>
 
-      {/* ✅ زر إضافة عميل جديد */}
-      <Button onClick={() => setShowAddCustomerModal(true)}>+ Add New Customer</Button>
+      {/* إدخال عميل جديد */}
+      <div className="flex gap-2">
+        <Input type="text" placeholder="New customer name" value={newCustomerName} onChange={(e) => setNewCustomerName(e.target.value)} />
+        <Button onClick={handleAddCustomer} disabled={loading}>
+          {loading ? "Adding..." : "Add Customer"}
+        </Button>
+      </div>
 
-      {/* ✅ اختيار التواريخ */}
+      {/* إدخال تواريخ الحجز */}
       <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
       <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
 
@@ -134,19 +125,6 @@ export default function BookingForm({ onClose }) {
       <Button onClick={handleBooking} disabled={loading}>
         {loading ? "Processing..." : "Confirm Booking"}
       </Button>
-
-      {/* ✅ نموذج إضافة عميل جديد */}
-      {showAddCustomerModal && (
-        <div className="modal bg-white p-4 rounded shadow-md">
-          <h2 className="text-lg font-bold mb-2">Add New Customer</h2>
-          <Input type="text" placeholder="Customer Name" value={newCustomerName} onChange={(e) => setNewCustomerName(e.target.value)} />
-          <Input type="text" placeholder="Phone Number" value={newCustomerPhone} onChange={(e) => setNewCustomerPhone(e.target.value)} />
-          <div className="flex space-x-2 mt-4">
-            <Button onClick={handleAddCustomer}>Save</Button>
-            <Button onClick={() => setShowAddCustomerModal(false)} variant="secondary">Cancel</Button>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
