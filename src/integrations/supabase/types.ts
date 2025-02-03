@@ -82,7 +82,6 @@ export type Database = {
           date: string
           description: string | null
           id: string
-          payment_method: string | null
           property_id: string | null
           updated_at: string | null
           user_id: string | null
@@ -94,7 +93,6 @@ export type Database = {
           date?: string
           description?: string | null
           id?: string
-          payment_method?: string | null
           property_id?: string | null
           updated_at?: string | null
           user_id?: string | null
@@ -106,7 +104,6 @@ export type Database = {
           date?: string
           description?: string | null
           id?: string
-          payment_method?: string | null
           property_id?: string | null
           updated_at?: string | null
           user_id?: string | null
@@ -133,7 +130,6 @@ export type Database = {
           amount: number
           amount_paid: number
           created_at: string | null
-          customer_id: string | null
           daily_rate: number
           days_rented: number
           description: string | null
@@ -150,7 +146,6 @@ export type Database = {
           amount: number
           amount_paid?: number
           created_at?: string | null
-          customer_id?: string | null
           daily_rate?: number
           days_rented?: number
           description?: string | null
@@ -167,7 +162,6 @@ export type Database = {
           amount?: number
           amount_paid?: number
           created_at?: string | null
-          customer_id?: string | null
           daily_rate?: number
           days_rented?: number
           description?: string | null
@@ -181,13 +175,6 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: [
-          {
-            foreignKeyName: "invoices_customer_id_fkey"
-            columns: ["customer_id"]
-            isOneToOne: false
-            referencedRelation: "customers"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "invoices_property_id_fkey"
             columns: ["property_id"]

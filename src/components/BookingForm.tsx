@@ -1,130 +1,193 @@
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select, SelectItem } from "@/components/ui/select";
-import { toast } from "@/components/ui/toast";
+import { useState, useEffect } from "react"
+import { format } from "date-fns"
+import { DatePicker } from "@/components/ui/date-picker"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { toast } from "sonner"
+import { supabase } from "@/integrations/supabase/client"
+import type { Property } from "@/types/property"
 
-export default function BookingForm({ onClose }) {
-  const [properties, setProperties] = useState([]);
-  const [customers, setCustomers] = useState([]);
-  const [selectedProperty, setSelectedProperty] = useState("");
-  const [selectedCustomer, setSelectedCustomer] = useState("");
-  const [newCustomerName, setNewCustomerName] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [totalPrice, setTotalPrice] = useState(0);
-  const [loading, setLoading] = useState(false);
+export function BookingForm() {
+  const [properties, setProperties] = useState<Property[]>([])
+  const [selectedProperty, setSelectedProperty] = useState<string>("")
+  const [startDate, setStartDate] = useState<Date>()
+  const [endDate, setEndDate] = useState<Date>()
+  const [dailyRate, setDailyRate] = useState(0)
+  const [totalPrice, setTotalPrice] = useState(0)
+  const [isLoading, setIsLoading] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   useEffect(() => {
-    fetchProperties();
-    fetchCustomers();
-  }, []);
+    fetchProperties()
+  }, [])
+
+  useEffect(() => {
+    if (startDate && endDate && dailyRate) {
+      const days = calculateDays(startDate, endDate)
+      setTotalPrice(days * dailyRate)
+    }
+  }, [startDate, endDate, dailyRate])
 
   const fetchProperties = async () => {
-    const { data, error } = await supabase.from("properties").select("*");
-    if (error) console.error("Error fetching properties:", error);
-    else setProperties(data || []);
-  };
+    setIsLoading(true)
+    try {
+      const { data, error } = await supabase
+        .from("properties")
+        .select("*")
+        .eq("status", "Available")
 
-  const fetchCustomers = async () => {
-    const { data, error } = await supabase.from("customers").select("*");
-    if (error) console.error("Error fetching customers:", error);
-    else setCustomers(data || []);
-  };
+      if (error) throw error
 
-  const calculateTotalPrice = () => {
-    if (!startDate || !endDate || !selectedProperty) return;
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    const diffDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
-    const property = properties.find((p) => p.id === selectedProperty);
-    if (property) setTotalPrice(diffDays * property.price_per_night || 0);
-  };
+      const typedProperties = data?.map(property => ({
+        ...property,
+        pricing_type: property.pricing_type as Property['pricing_type']
+      })) || []
 
-  useEffect(() => {
-    calculateTotalPrice();
-  }, [startDate, endDate, selectedProperty]);
-
-  const handleAddCustomer = async () => {
-    if (!newCustomerName) {
-      toast({ title: "Error", description: "Customer name is required", status: "error" });
-      return;
+      setProperties(typedProperties)
+    } catch (error) {
+      console.error("❌ Error fetching properties:", error)
+      toast.error("Failed to load properties")
+    } finally {
+      setIsLoading(false)
     }
-    setLoading(true);
-    const { data, error } = await supabase.from("customers").insert([{ name: newCustomerName }]).select();
-    setLoading(false);
-    if (error) {
-      toast({ title: "Error", description: error.message, status: "error" });
-    } else {
-      toast({ title: "Success", description: "Customer added!", status: "success" });
-      setCustomers([...customers, ...data]);
-      setSelectedCustomer(data[0].id);
-      setNewCustomerName("");
-    }
-  };
+  }
+
+  const calculateDays = (start: Date, end: Date) => {
+    return Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)))
+  }
 
   const handleBooking = async () => {
-    if (!selectedProperty || !selectedCustomer || !startDate || !endDate) {
-      toast({ title: "Error", description: "All fields are required", status: "error" });
-      return;
+    if (!selectedProperty || !startDate || !endDate) {
+      toast.error("❌ Please complete all fields")
+      return
     }
-    setLoading(true);
-    const { data, error } = await supabase.from("bookings").insert([
-      {
+
+    setIsSubmitting(true)
+    try {
+      // 🔍 **جلب `tenant_id`**
+      const { data: userData, error: userError } = await supabase.auth.getUser();
+      console.log("User Data:", userData);
+      
+      const tenantId = userData?.user?.id;
+      if (!tenantId) {
+        console.error("❌ No tenant ID found");
+        toast.error("User is not authenticated.");
+        return;
+      }
+      console.log("✅ Tenant ID:", tenantId);
+
+      // 🔍 **التحقق من الحجوزات السابقة**
+      const { data: existingBookings, error: checkError } = await supabase
+        .from("invoices")
+        .select("*")
+        .eq("property_id", selectedProperty)
+        .or(`start_date.lte.${format(endDate, "yyyy-MM-dd")},end_date.gte.${format(startDate, "yyyy-MM-dd")}`)
+        .neq("status", "cancelled");
+
+      if (checkError) throw checkError;
+
+      if (existingBookings && existingBookings.length > 0) {
+        toast.error("❌ This property is already booked for the selected dates")
+        return
+      }
+
+      // 🔍 **التأكد من صحة البيانات قبل الإرسال**
+      console.log("📌 Booking Data:", {
         property_id: selectedProperty,
-        customer_id: selectedCustomer,
-        start_date: startDate,
-        end_date: endDate,
-        total_price: totalPrice,
-      },
-    ]);
-    setLoading(false);
-    if (error) {
-      toast({ title: "Error", description: error.message, status: "error" });
-    } else {
-      toast({ title: "Success", description: "Booking confirmed!", status: "success" });
-      onClose();
+        tenant_id: tenantId,
+        start_date: format(startDate, "yyyy-MM-dd"),
+        end_date: format(endDate, "yyyy-MM-dd"),
+        daily_rate: dailyRate,
+        amount: totalPrice,
+        status: "pending",
+        due_date: format(startDate, "yyyy-MM-dd"),
+        amount_paid: 0,
+        days_rented: calculateDays(startDate, endDate),
+      });
+
+      // 🔥 **إنشاء الحجز في Supabase**
+      const { error: bookingError } = await supabase.from("invoices").insert([
+        {
+          property_id: selectedProperty,
+          tenant_id: tenantId,
+          start_date: format(startDate, "yyyy-MM-dd"),
+          end_date: format(endDate, "yyyy-MM-dd"),
+          daily_rate: dailyRate,
+          amount: totalPrice,
+          status: "pending",
+          due_date: format(startDate, "yyyy-MM-dd"),
+          amount_paid: 0,
+          days_rented: calculateDays(startDate, endDate),
+        },
+      ]);
+
+      if (bookingError) {
+        console.error("❌ Booking error:", bookingError);
+        throw bookingError;
+      }
+
+      toast.success("✅ Booking successfully created!")
+
+      // 🔄 **إعادة تعيين النموذج**
+      setSelectedProperty("")
+      setStartDate(undefined)
+      setEndDate(undefined)
+      setDailyRate(0)
+      setTotalPrice(0)
+    } catch (error) {
+      console.error("❌ Error creating booking:", error)
+      toast.error("Failed to create booking. Please try again.")
+    } finally {
+      setIsSubmitting(false)
     }
-  };
+  }
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-xl font-bold">Create New Booking</h2>
-      
-      {/* اختيار العقار */}
-      <Select value={selectedProperty} onChange={setSelectedProperty} placeholder="Choose a property">
-        {properties.map((property) => (
-          <SelectItem key={property.id} value={property.id}>
-            {property.name} - {property.price_per_night} MAD/day
-          </SelectItem>
-        ))}
-      </Select>
+    <Card className="w-full max-w-md mx-auto">
+      <CardHeader>
+        <CardTitle>Book a Property</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <label className="text-sm font-medium">Select Property</label>
+          <Select
+            value={selectedProperty}
+            onValueChange={(value) => {
+              setSelectedProperty(value)
+              const property = properties.find(p => p.id === value)
+              setDailyRate(property?.daily_rate || 0)
+            }}
+            disabled={isLoading}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Choose a property" />
+            </SelectTrigger>
+            <SelectContent>
+              {properties.map((property) => (
+                <SelectItem key={property.id} value={property.id}>
+                  {property.name} - {property.daily_rate} MAD/day
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-      {/* اختيار العميل */}
-      <Select value={selectedCustomer} onChange={setSelectedCustomer} placeholder="Choose a customer">
-        {customers.map((customer) => (
-          <SelectItem key={customer.id} value={customer.id}>{customer.name}</SelectItem>
-        ))}
-      </Select>
+        <DatePicker date={startDate} setDate={setStartDate} placeholder="Start Date" />
+        <DatePicker date={endDate} setDate={setEndDate} placeholder="End Date" />
 
-      {/* إدخال عميل جديد */}
-      <div className="flex gap-2">
-        <Input type="text" placeholder="New customer name" value={newCustomerName} onChange={(e) => setNewCustomerName(e.target.value)} />
-        <Button onClick={handleAddCustomer} disabled={loading}>
-          {loading ? "Adding..." : "Add Customer"}
+        <p className="text-lg font-semibold">Total Price: {totalPrice.toLocaleString()} MAD</p>
+
+        <Button onClick={handleBooking} disabled={isSubmitting || !selectedProperty || !startDate || !endDate}>
+          {isSubmitting ? "Creating booking..." : "Confirm Booking"}
         </Button>
-      </div>
-
-      {/* إدخال تواريخ الحجز */}
-      <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-      <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
-
-      <p className="text-lg font-semibold">Total Price: {totalPrice} MAD</p>
-
-      <Button onClick={handleBooking} disabled={loading}>
-        {loading ? "Processing..." : "Confirm Booking"}
-      </Button>
-    </div>
-  );
+      </CardContent>
+    </Card>
+  )
 }
