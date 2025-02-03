@@ -7,7 +7,7 @@ interface CustomerSpendingChartProps {
   customerId: string
 }
 
-export function CustomerSpendingChart({ customerId }: CustomerSpendingChartProps) {
+export default function CustomerSpendingChart({ customerId }: CustomerSpendingChartProps) {
   const { data: spendingData } = useQuery({
     queryKey: ["customer-spending", customerId],
     queryFn: async () => {

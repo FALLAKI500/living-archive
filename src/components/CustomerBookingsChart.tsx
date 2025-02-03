@@ -7,7 +7,7 @@ interface CustomerBookingsChartProps {
   customerId: string
 }
 
-export function CustomerBookingsChart({ customerId }: CustomerBookingsChartProps) {
+export default function CustomerBookingsChart({ customerId }: CustomerBookingsChartProps) {
   const { data: bookingData } = useQuery({
     queryKey: ["customer-bookings", customerId],
     queryFn: async () => {

@@ -1,4 +1,5 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { memo } from "react"
+import { motion } from "framer-motion"
 
 interface CustomerDetailsProps {
   fullName: string
@@ -10,7 +11,7 @@ interface CustomerDetailsProps {
   lastBookingDate?: string
 }
 
-export function CustomerDetails({
+export const CustomerDetails = memo(({
   fullName,
   phone,
   city,
@@ -18,9 +19,14 @@ export function CustomerDetails({
   totalBookings,
   totalSpent,
   lastBookingDate,
-}: CustomerDetailsProps) {
+}: CustomerDetailsProps) => {
   return (
-    <div className="space-y-4">
+    <motion.div 
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className="space-y-4"
+    >
       <div className="space-y-2">
         {companyName && (
           <p className="text-sm text-muted-foreground">
@@ -40,18 +46,26 @@ export function CustomerDetails({
       </div>
 
       <div className="pt-4 border-t">
-        <p className="text-sm font-medium">
+        <motion.p 
+          className="text-sm font-medium"
+          whileHover={{ scale: 1.02 }}
+        >
           Total Bookings: {totalBookings}
-        </p>
-        <p className="text-sm font-medium">
+        </motion.p>
+        <motion.p 
+          className="text-sm font-medium"
+          whileHover={{ scale: 1.02 }}
+        >
           Total Spent: {Number(totalSpent).toLocaleString()} MAD
-        </p>
+        </motion.p>
         {lastBookingDate && (
           <p className="text-sm text-muted-foreground">
             Last Booking: {new Date(lastBookingDate).toLocaleDateString()}
           </p>
         )}
       </div>
-    </div>
+    </motion.div>
   )
-}
+})
+
+CustomerDetails.displayName = "CustomerDetails"

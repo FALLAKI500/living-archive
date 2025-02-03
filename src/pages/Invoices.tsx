@@ -8,6 +8,7 @@ import { InvoicePDFDialog } from "@/components/InvoicePDFDialog"
 import { ExportDialog } from "@/components/ExportDialog"
 import { Input } from "@/components/ui/input"
 import { DatePicker } from "@/components/ui/date-picker"
+import { Invoice } from "@/types/invoice"
 import {
   Select,
   SelectContent,
@@ -35,26 +36,9 @@ import { supabase } from "@/integrations/supabase/client"
 import { format } from "date-fns"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
-import { Invoice } from "@/types/invoice"
+import type { Invoice } from "@/types/invoice"
 
-interface Invoice {
-  id: string
-  property_id: string
-  tenant_id: string
-  amount: number
-  amount_paid: number
-  due_date: string
-  status: "pending" | "paid" | "overdue" | "cancelled"
-  description: string
-  created_at: string
-  start_date: string | null
-  end_date: string | null
-  properties: {
-    name: string
-  }
-  daily_rate: number
-  days_rented: number
-}
+// Remove the duplicate Invoice interface definition and use the imported type
 
 export default function Invoices() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
