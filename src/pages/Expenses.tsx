@@ -1,22 +1,22 @@
-import { useState } from "react"
-import { useQuery } from "@tanstack/react-query"
-import { Layout } from "@/components/Layout"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Layout } from "@/components/Layout";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select"
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
 import {
   Table,
   TableBody,
@@ -24,85 +24,107 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
-import { Plus, Loader2 } from "lucide-react"
-import { format } from "date-fns"
-import { toast } from "sonner"
-import { supabase } from "@/integrations/supabase/client"
-import { DatePicker } from "@/components/ui/date-picker"
-
-import { Expense, ExpenseCategory } from "@/types/expense"
+} from "@/components/ui/table";
+import { Plus, Loader2 } from "lucide-react";
+import { format } from "date-fns";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 type Expense = {
-  id: string
-  amount: number
-  category: string
-  description?: string
-  date: string
-  payment_method?: string
-  property?: {
-    name: string
-  }
-}
+  id?: string;
+  user_id?: string;
+  amount: number;
+  category: string;
+  description?: string;
+  date: string;
+  payment_method?: string;
+  property_id?: string | null;
+};
 
 export default function Expenses() {
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const queryClient = useQueryClient();
 
+  // ✅ جلب قائمة المصروفات
   const { data: expenses, isLoading } = useQuery({
     queryKey: ["expenses"],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("expenses")
         .select("*, property:properties(name)")
-        .order("date", { ascending: false })
+        .order("date", { ascending: false });
 
-      if (error) throw error
-      return data as Expense[]
+      if (error) throw error;
+      return data as Expense[];
     },
-  })
+  });
 
-const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault()
-    setIsSubmitting(true)
-
-    try {
-      const formData = new FormData(e.currentTarget)
-      const expenseData: Expense = {
-        amount: Number(formData.get("amount")),
-        category: formData.get("category") as ExpenseCategory,
-        description: formData.get("description") as string,
-        date: formData.get("date") as string,
-        payment_method: formData.get("payment_method") as string,
-        property_id: formData.get("property_id") as string || null,
-      }
-
-      const { error } = await supabase.from("expenses").insert([expenseData])
-
-      if (error) throw error
-
-      toast.success("Expense added successfully")
-      setIsDialogOpen(false)
-    } catch (error) {
-      console.error("Error adding expense:", error)
-      toast.error("Failed to add expense")
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
+  // ✅ جلب قائمة العقارات
   const { data: properties } = useQuery({
     queryKey: ["properties"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("properties")
-        .select("id, name")
+      const { data, error } = await supabase.from("properties").select("id, name");
 
-      if (error) throw error
-      return data
+      if (error) throw error;
+      return data;
     },
-  })
+  });
 
+  // ✅ تعريف دالة إدراج المصروفات مع التحديث التلقائي للبيانات
+  const addExpenseMutation = useMutation({
+    mutationFn: async (expenseData: Expense) => {
+      const { error } = await supabase.from("expenses").insert([expenseData]);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Expense added successfully");
+      queryClient.invalidateQueries(["expenses"]); // 🔄 تحديث البيانات فورًا
+      setIsDialogOpen(false);
+    },
+    onError: (error) => {
+      console.error("Error adding expense:", error);
+      toast.error("Failed to add expense");
+    },
+  });
+
+  // ✅ دالة التعامل مع إضافة مصروف جديد
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    try {
+      // 🔹 جلب بيانات المستخدم الحالي
+      const { data: user, error: userError } = await supabase.auth.getUser();
+      if (userError || !user || !user.user) {
+        toast.error("User not authenticated");
+        setIsSubmitting(false);
+        return;
+      }
+
+      // 🔹 تجهيز البيانات قبل الإدخال
+      const formData = new FormData(e.currentTarget);
+      const expenseData: Expense = {
+        user_id: user.user.id, // ✅ إضافة معرف المستخدم
+        amount: Number(formData.get("amount")),
+        category: formData.get("category") as string,
+        description: formData.get("description") as string || null,
+        date: formData.get("date") as string,
+        payment_method: formData.get("payment_method") as string,
+        property_id: formData.get("property_id") ? formData.get("property_id") : null,
+      };
+
+      // 🔹 إدراج البيانات في قاعدة البيانات
+      await addExpenseMutation.mutateAsync(expenseData);
+    } catch (error) {
+      console.error("Error adding expense:", error);
+      toast.error("Failed to add expense");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // ✅ عرض شاشة تحميل عند تحميل البيانات
   if (isLoading) {
     return (
       <Layout>
@@ -113,19 +135,14 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
           </p>
         </div>
       </Layout>
-    )
+    );
   }
 
   return (
     <Layout>
       <div className="space-y-6">
         <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight">Expenses</h1>
-            <p className="text-muted-foreground">
-              Manage and track your property expenses
-            </p>
-          </div>
+          <h1 className="text-3xl font-bold tracking-tight">Expenses</h1>
           <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
             <DialogTrigger asChild>
               <Button>
@@ -138,76 +155,43 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
                 <DialogTitle>Add New Expense</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleSubmit} className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Amount</label>
-                  <Input
-                    name="amount"
-                    type="number"
-                    step="0.01"
-                    required
-                    placeholder="Enter amount"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Category</label>
-                  <Select name="category" required>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="maintenance">Maintenance</SelectItem>
-                      <SelectItem value="utilities">Utilities</SelectItem>
-                      <SelectItem value="taxes">Taxes</SelectItem>
-                      <SelectItem value="insurance">Insurance</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Payment Method</label>
-                  <Select name="payment_method">
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select payment method" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="cash">Cash</SelectItem>
-                      <SelectItem value="card">Card</SelectItem>
-                      <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Property (Optional)</label>
-                  <Select name="property_id">
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select property" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {properties?.map((property) => (
-                        <SelectItem key={property.id} value={property.id}>
-                          {property.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Description</label>
-                  <Input
-                    name="description"
-                    placeholder="Enter description (optional)"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-sm font-medium">Date</label>
-                  <Input
-                    type="date"
-                    name="date"
-                    required
-                    defaultValue={format(new Date(), "yyyy-MM-dd")}
-                  />
-                </div>
+                <Input name="amount" type="number" required placeholder="Enter amount" />
+                <Select name="category" required defaultValue="utilities">
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="maintenance">Maintenance</SelectItem>
+                    <SelectItem value="utilities">Utilities</SelectItem>
+                    <SelectItem value="taxes">Taxes</SelectItem>
+                    <SelectItem value="insurance">Insurance</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select name="payment_method" defaultValue="cash">
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select payment method" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="cash">Cash</SelectItem>
+                    <SelectItem value="card">Card</SelectItem>
+                    <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select name="property_id">
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select property" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {properties?.map((property) => (
+                      <SelectItem key={property.id} value={property.id}>
+                        {property.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Input name="description" placeholder="Enter description (optional)" />
+                <Input type="date" name="date" required defaultValue={format(new Date(), "yyyy-MM-dd")} />
                 <Button type="submit" className="w-full" disabled={isSubmitting}>
                   {isSubmitting ? "Adding..." : "Add Expense"}
                 </Button>
@@ -215,43 +199,28 @@ const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
             </DialogContent>
           </Dialog>
         </div>
-
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Date</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead>Amount</TableHead>
-                <TableHead>Payment Method</TableHead>
-                <TableHead>Property</TableHead>
-                <TableHead>Description</TableHead>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Date</TableHead>
+              <TableHead>Category</TableHead>
+              <TableHead>Amount</TableHead>
+              <TableHead>Payment Method</TableHead>
+              <TableHead>Property</TableHead>
+              <TableHead>Description</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {expenses?.map((expense) => (
+              <TableRow key={expense.id}>
+                <TableCell>{format(new Date(expense.date), "PPP")}</TableCell>
+                <TableCell>{expense.category}</TableCell>
+                <TableCell>{expense.amount} MAD</TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {expenses?.map((expense) => (
-                <TableRow key={expense.id}>
-                  <TableCell>{format(new Date(expense.date), "PPP")}</TableCell>
-                  <TableCell className="capitalize">{expense.category}</TableCell>
-                  <TableCell>{expense.amount.toLocaleString()} MAD</TableCell>
-                  <TableCell className="capitalize">
-                    {expense.payment_method || "N/A"}
-                  </TableCell>
-                  <TableCell>{expense.property?.name || "N/A"}</TableCell>
-                  <TableCell>{expense.description || "N/A"}</TableCell>
-                </TableRow>
-              ))}
-              {(!expenses || expenses.length === 0) && (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center py-8">
-                    <p className="text-muted-foreground">No expenses found</p>
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
+            ))}
+          </TableBody>
+        </Table>
       </div>
     </Layout>
-  )
+  );
 }
