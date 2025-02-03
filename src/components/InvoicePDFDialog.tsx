@@ -9,6 +9,7 @@ interface InvoicePDFDialogProps {
 }
 
 export function InvoicePDFDialog({ invoice }: InvoicePDFDialogProps) {
+  // Ensure required properties are never undefined
   const invoiceWithDefaults = {
     ...invoice,
     description: invoice.description || 'No description provided',
@@ -21,8 +22,10 @@ export function InvoicePDFDialog({ invoice }: InvoicePDFDialogProps) {
       fileName={`invoice-${invoice.id}.pdf`}
     >
       {({ loading }) => (
-        <Button variant="ghost" size="icon" disabled={loading}>
-          <FileDown className="h-4 w-4" />
+        <Button variant="ghost" size="icon" disabled={loading} asChild>
+          <span>
+            <FileDown className="h-4 w-4" />
+          </span>
         </Button>
       )}
     </PDFDownloadLink>

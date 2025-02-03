@@ -3,7 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
-import { toast } from "sonner";
 
 interface MonthlyRevenueTrendProps {
   startDate: Date;
@@ -11,10 +10,9 @@ interface MonthlyRevenueTrendProps {
 }
 
 export function MonthlyRevenueTrend({ startDate, endDate }: MonthlyRevenueTrendProps) {
-  const { data: monthlyRevenue, isLoading, error } = useQuery({
+  const { data: monthlyRevenue, isLoading } = useQuery({
     queryKey: ["monthly-revenue", startDate, endDate],
     queryFn: async () => {
-      console.log("📊 Fetching revenue data...");
       const { data, error } = await supabase
         .from("monthly_revenue_summary")
         .select("*")
@@ -22,13 +20,7 @@ export function MonthlyRevenueTrend({ startDate, endDate }: MonthlyRevenueTrendP
         .lte("month", endDate.toISOString())
         .order("month", { ascending: true });
 
-      if (error) {
-        console.error("❌ Supabase Error:", error);
-        toast.error("Failed to load revenue data");
-        throw error;
-      }
-
-      console.log("✅ Revenue data fetched:", data || "No Data");
+      if (error) throw error;
       return data.map(item => ({
         ...item,
         month: format(new Date(item.month), "MMM yyyy"),
@@ -37,22 +29,6 @@ export function MonthlyRevenueTrend({ startDate, endDate }: MonthlyRevenueTrendP
     }
   });
 
-  // Handle error state
-  if (error) {
-    console.error("❌ Query Error:", error);
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Monthly Revenue Trend</CardTitle>
-        </CardHeader>
-        <CardContent className="h-[400px] flex items-center justify-center">
-          <p className="text-red-500">Failed to load revenue data. Please try again later.</p>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  // Handle loading state
   if (isLoading) {
     return (
       <Card>
@@ -66,21 +42,6 @@ export function MonthlyRevenueTrend({ startDate, endDate }: MonthlyRevenueTrendP
     );
   }
 
-  // Ensure we have data before rendering
-  const revenueData = monthlyRevenue || [];
-  if (revenueData.length === 0) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Monthly Revenue Trend</CardTitle>
-        </CardHeader>
-        <CardContent className="h-[400px] flex items-center justify-center">
-          <p className="text-muted-foreground">No revenue data available for the selected period.</p>
-        </CardContent>
-      </Card>
-    );
-  }
-
   return (
     <Card>
       <CardHeader>
@@ -89,7 +50,7 @@ export function MonthlyRevenueTrend({ startDate, endDate }: MonthlyRevenueTrendP
       <CardContent>
         <div className="h-[400px]">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={revenueData}>
+            <LineChart data={monthlyRevenue}>
               <XAxis 
                 dataKey="month" 
                 stroke="#888888"
@@ -98,7 +59,7 @@ export function MonthlyRevenueTrend({ startDate, endDate }: MonthlyRevenueTrendP
               <YAxis
                 stroke="#888888"
                 fontSize={12}
-                tickFormatter={(value) => `${value.toLocaleString()} MAD`}
+                tickFormatter={(value) => `${value} MAD`}
               />
               <Tooltip 
                 formatter={(value: number) => [`${value.toLocaleString()} MAD`, "Revenue"]}

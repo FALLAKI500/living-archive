@@ -42,17 +42,18 @@ export function BookingForm() {
         .from("properties")
         .select("*")
         .eq("status", "Available")
-
+      
       if (error) throw error
-
+      
+      // Ensure the data matches the Property type
       const typedProperties = data?.map(property => ({
         ...property,
         pricing_type: property.pricing_type as Property['pricing_type']
       })) || []
-
+      
       setProperties(typedProperties)
     } catch (error) {
-      console.error("❌ Error fetching properties:", error)
+      console.error("Error fetching properties:", error)
       toast.error("Failed to load properties")
     } finally {
       setIsLoading(false)
@@ -65,84 +66,58 @@ export function BookingForm() {
 
   const handleBooking = async () => {
     if (!selectedProperty || !startDate || !endDate) {
-      toast.error("❌ Please complete all fields")
+      toast.error("Please complete all fields")
       return
     }
 
     setIsSubmitting(true)
     try {
-      // 🔍 **جلب `tenant_id`**
-      const { data: userData, error: userError } = await supabase.auth.getUser();
-      console.log("User Data:", userData);
-      
-      const tenantId = userData?.user?.id;
-      if (!tenantId) {
-        console.error("❌ No tenant ID found");
-        toast.error("User is not authenticated.");
-        return;
-      }
-      console.log("✅ Tenant ID:", tenantId);
-
-      // 🔍 **التحقق من الحجوزات السابقة**
+      // Check for existing bookings
       const { data: existingBookings, error: checkError } = await supabase
         .from("invoices")
         .select("*")
         .eq("property_id", selectedProperty)
-        .or(`start_date.lte.${format(endDate, "yyyy-MM-dd")},end_date.gte.${format(startDate, "yyyy-MM-dd")}`)
-        .neq("status", "cancelled");
+        .or(`start_date.lte.${format(endDate, 'yyyy-MM-dd')},end_date.gte.${format(startDate, 'yyyy-MM-dd')}`)
+        .neq("status", "cancelled")
 
-      if (checkError) throw checkError;
+      if (checkError) throw checkError
 
       if (existingBookings && existingBookings.length > 0) {
-        toast.error("❌ This property is already booked for the selected dates")
+        toast.error("This property is already booked for the selected dates")
         return
       }
 
-      // 🔍 **التأكد من صحة البيانات قبل الإرسال**
-      console.log("📌 Booking Data:", {
-        property_id: selectedProperty,
-        tenant_id: tenantId,
-        start_date: format(startDate, "yyyy-MM-dd"),
-        end_date: format(endDate, "yyyy-MM-dd"),
-        daily_rate: dailyRate,
-        amount: totalPrice,
-        status: "pending",
-        due_date: format(startDate, "yyyy-MM-dd"),
-        amount_paid: 0,
-        days_rented: calculateDays(startDate, endDate),
-      });
-
-      // 🔥 **إنشاء الحجز في Supabase**
-      const { error: bookingError } = await supabase.from("invoices").insert([
-        {
+      // Create the booking
+      const { error: bookingError } = await supabase
+        .from("invoices")
+        .insert([{
           property_id: selectedProperty,
-          tenant_id: tenantId,
-          start_date: format(startDate, "yyyy-MM-dd"),
-          end_date: format(endDate, "yyyy-MM-dd"),
+          tenant_id: (await supabase.auth.getUser()).data.user?.id,
+          start_date: format(startDate, 'yyyy-MM-dd'),
+          end_date: format(endDate, 'yyyy-MM-dd'),
           daily_rate: dailyRate,
           amount: totalPrice,
           status: "pending",
-          due_date: format(startDate, "yyyy-MM-dd"),
+          due_date: format(startDate, 'yyyy-MM-dd'), // Setting due date to start date
           amount_paid: 0,
-          days_rented: calculateDays(startDate, endDate),
-        },
-      ]);
+          days_rented: calculateDays(startDate, endDate)
+        }])
 
       if (bookingError) {
-        console.error("❌ Booking error:", bookingError);
-        throw bookingError;
+        console.error("Booking error:", bookingError)
+        throw bookingError
       }
 
-      toast.success("✅ Booking successfully created!")
-
-      // 🔄 **إعادة تعيين النموذج**
+      toast.success("Booking successfully created!")
+      
+      // Reset form
       setSelectedProperty("")
       setStartDate(undefined)
       setEndDate(undefined)
       setDailyRate(0)
       setTotalPrice(0)
     } catch (error) {
-      console.error("❌ Error creating booking:", error)
+      console.error("Error creating booking:", error)
       toast.error("Failed to create booking. Please try again.")
     } finally {
       setIsSubmitting(false)
@@ -179,12 +154,38 @@ export function BookingForm() {
           </Select>
         </div>
 
-        <DatePicker date={startDate} setDate={setStartDate} placeholder="Start Date" />
-        <DatePicker date={endDate} setDate={setEndDate} placeholder="End Date" />
+        <div className="space-y-2 relative z-50">
+          <label className="text-sm font-medium">Start Date</label>
+          <DatePicker
+            date={startDate}
+            setDate={setStartDate}
+            placeholder="Select start date"
+            disabled={!selectedProperty}
+          />
+        </div>
 
-        <p className="text-lg font-semibold">Total Price: {totalPrice.toLocaleString()} MAD</p>
+        <div className="space-y-2 relative z-40">
+          <label className="text-sm font-medium">End Date</label>
+          <DatePicker
+            date={endDate}
+            setDate={setEndDate}
+            placeholder="Select end date"
+            disabled={!startDate}
+            minDate={startDate}
+          />
+        </div>
 
-        <Button onClick={handleBooking} disabled={isSubmitting || !selectedProperty || !startDate || !endDate}>
+        <div className="pt-2">
+          <p className="text-lg font-semibold">
+            Total Price: {totalPrice.toLocaleString()} MAD
+          </p>
+        </div>
+
+        <Button 
+          className="w-full" 
+          onClick={handleBooking}
+          disabled={isSubmitting || !selectedProperty || !startDate || !endDate}
+        >
           {isSubmitting ? "Creating booking..." : "Confirm Booking"}
         </Button>
       </CardContent>
