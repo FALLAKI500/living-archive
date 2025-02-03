@@ -22,23 +22,37 @@ export default function BookingForm({ onClose }) {
 
   const fetchProperties = async () => {
     const { data, error } = await supabase.from("properties").select("*");
-    if (error) console.error("Error fetching properties:", error);
+    if (error) console.error("❌ Error fetching properties:", error);
     else setProperties(data || []);
   };
 
   const fetchCustomers = async () => {
     const { data, error } = await supabase.from("customers").select("*");
-    if (error) console.error("Error fetching customers:", error);
+    if (error) console.error("❌ Error fetching customers:", error);
     else setCustomers(data || []);
   };
 
   const calculateTotalPrice = () => {
     if (!startDate || !endDate || !selectedProperty) return;
+    
     const start = new Date(startDate);
     const end = new Date(endDate);
+    
+    // ✅ التحقق من صحة التواريخ
+    if (isNaN(start.getTime()) || isNaN(end.getTime()) || start >= end) {
+      setTotalPrice(0);
+      return;
+    }
+
     const diffDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
     const property = properties.find((p) => p.id === selectedProperty);
-    if (property) setTotalPrice(diffDays * property.price_per_night || 0);
+    
+    // ✅ التحقق من أن `price_per_night` موجود
+    if (property && property.price_per_night) {
+      setTotalPrice(diffDays * property.price_per_night);
+    } else {
+      setTotalPrice(0);
+    }
   };
 
   useEffect(() => {
@@ -47,10 +61,19 @@ export default function BookingForm({ onClose }) {
 
   const handleBooking = async () => {
     if (!selectedProperty || !selectedCustomer || !startDate || !endDate) {
-      toast({ title: "Error", description: "All fields are required", status: "error" });
+      toast({ title: "❌ Error", description: "All fields are required", status: "error" });
       return;
     }
     setLoading(true);
+
+    console.log("🔹 Booking Data:", {
+      property_id: selectedProperty,
+      customer_id: selectedCustomer,
+      start_date: startDate,
+      end_date: endDate,
+      total_price: totalPrice,
+    });
+
     const { data, error } = await supabase.from("bookings").insert([
       {
         property_id: selectedProperty,
@@ -60,11 +83,14 @@ export default function BookingForm({ onClose }) {
         total_price: totalPrice,
       },
     ]);
+
     setLoading(false);
     if (error) {
-      toast({ title: "Error", description: error.message, status: "error" });
+      console.error("❌ Booking Error:", error);
+      toast({ title: "❌ Error", description: error.message, status: "error" });
     } else {
-      toast({ title: "Success", description: "Booking confirmed!", status: "success" });
+      console.log("✅ Booking Successful:", data);
+      toast({ title: "✅ Success", description: "Booking confirmed!", status: "success" });
       onClose();
     }
   };
@@ -73,23 +99,32 @@ export default function BookingForm({ onClose }) {
     <div className="space-y-4">
       <h2 className="text-xl font-bold">Create New Booking</h2>
       
+      {/* ✅ اختيار العقار */}
       <Select value={selectedProperty} onChange={setSelectedProperty} placeholder="Choose a property">
         {properties.map((property) => (
-          <SelectItem key={property.id} value={property.id}>{property.name}</SelectItem>
+          <SelectItem key={property.id} value={property.id}>
+            {property.name}
+          </SelectItem>
         ))}
       </Select>
 
+      {/* ✅ اختيار العميل */}
       <Select value={selectedCustomer} onChange={setSelectedCustomer} placeholder="Choose a customer">
         {customers.map((customer) => (
-          <SelectItem key={customer.id} value={customer.id}>{customer.name}</SelectItem>
+          <SelectItem key={customer.id} value={customer.id}>
+            {customer.name}
+          </SelectItem>
         ))}
       </Select>
 
+      {/* ✅ إدخال التواريخ */}
       <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
       <Input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
 
+      {/* ✅ عرض السعر الإجمالي */}
       <p className="text-lg font-semibold">Total Price: {totalPrice} MAD</p>
 
+      {/* ✅ زر تأكيد الحجز */}
       <Button onClick={handleBooking} disabled={loading}>
         {loading ? "Processing..." : "Confirm Booking"}
       </Button>
