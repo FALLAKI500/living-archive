@@ -21,10 +21,8 @@ export function InvoicePDFDialog({ invoice }: InvoicePDFDialogProps) {
       fileName={`invoice-${invoice.id}.pdf`}
     >
       {({ loading }) => (
-        <Button variant="ghost" size="icon" disabled={loading} asChild>
-          <span>
-            <FileDown className="h-4 w-4" />
-          </span>
+        <Button variant="ghost" size="icon" disabled={loading}>
+          <FileDown className="h-4 w-4" />
         </Button>
       )}
     </PDFDownloadLink>
