@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button"
 import { FileDown } from "lucide-react"
-import { PDFDownloadLink } from "@react-pdf/renderer"
+import { PDFDownloadLink, BlobProvider } from "@react-pdf/renderer"
 import { InvoicePDF } from "./InvoicePDF"
 import { Invoice } from "@/types/invoice"
 import { ReactElement } from "react"
@@ -17,15 +17,17 @@ export function InvoicePDFDialog({ invoice }: InvoicePDFDialogProps) {
   }
 
   return (
-    <PDFDownloadLink
-      document={<InvoicePDF invoice={invoiceWithDefaults} />}
-      fileName={`invoice-${invoice.id}.pdf`}
-    >
-      {({ loading }): ReactElement => (
-        <Button variant="ghost" size="icon" disabled={loading}>
-          <FileDown className="h-4 w-4" />
-        </Button>
+    <BlobProvider document={<InvoicePDF invoice={invoiceWithDefaults} />}>
+      {({ blob, url, loading }): ReactElement => (
+        <PDFDownloadLink
+          document={<InvoicePDF invoice={invoiceWithDefaults} />}
+          fileName={`invoice-${invoice.id}.pdf`}
+        >
+          <Button variant="ghost" size="icon" disabled={loading}>
+            <FileDown className="h-4 w-4" />
+          </Button>
+        </PDFDownloadLink>
       )}
-    </PDFDownloadLink>
+    </BlobProvider>
   )
 }
