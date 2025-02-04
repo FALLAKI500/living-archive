@@ -15,6 +15,13 @@ import { addDays } from "date-fns"
 import { DateRange } from "react-day-picker"
 import { CustomerData } from "@/types/customer"
 
+interface QueryParams {
+  start_date: string | undefined
+  end_date: string | undefined
+  min_spent: number | null
+  status: string | null
+}
+
 export function CustomerDashboard() {
   const { toast } = useToast()
   const [searchQuery, setSearchQuery] = useState("")
@@ -28,12 +35,14 @@ export function CustomerDashboard() {
   const { data: customers, isLoading } = useQuery({
     queryKey: ["customers", dateRange, statusFilter, minSpent],
     queryFn: async () => {
-      const { data, error } = await supabase.rpc("get_customer_statistics", {
+      const params: QueryParams = {
         start_date: dateRange.from?.toISOString(),
         end_date: dateRange.to?.toISOString(),
         min_spent: minSpent,
         status: statusFilter,
-      })
+      }
+
+      const { data, error } = await supabase.rpc("get_customer_statistics", params)
 
       if (error) {
         toast({
