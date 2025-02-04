@@ -71,14 +71,14 @@ export function BookingForm() {
       const { data: settings } = await supabase
         .from('user_settings')
         .select('google_calendar_enabled')
-        .single();
+        .single()
 
       if (!settings?.google_calendar_enabled) {
-        console.log("Google Calendar integration is disabled");
-        return;
+        console.log("Google Calendar integration is disabled")
+        return
       }
 
-      const property = properties.find(p => p.id === bookingData.property_id);
+      const property = properties.find(p => p.id === bookingData.property_id)
       
       const response = await fetch('/api/calendar', {
         method: 'POST',
@@ -95,20 +95,20 @@ export function BookingForm() {
             date: format(endDate!, 'yyyy-MM-dd'),
           },
         }),
-      });
+      })
 
       if (!response.ok) {
-        throw new Error('Failed to sync with Google Calendar');
+        throw new Error('Failed to sync with Google Calendar')
       }
 
-      toast.success("✅ Booking synced with Google Calendar");
+      toast.success("✅ Booking synced with Google Calendar")
     } catch (error) {
-      console.error("❌ Calendar sync error:", error);
-      toast.error("Failed to sync with Google Calendar");
+      console.error("❌ Calendar sync error:", error)
+      toast.error("Failed to sync with Google Calendar")
     } finally {
-      setIsCalendarSyncing(false);
+      setIsCalendarSyncing(false)
     }
-  };
+  }
 
   const handleBooking = async () => {
     if (!selectedProperty || !startDate || !endDate) {
@@ -118,13 +118,13 @@ export function BookingForm() {
 
     setIsSubmitting(true)
     try {
-      const { data: userData, error: userError } = await supabase.auth.getUser();
+      const { data: userData, error: userError } = await supabase.auth.getUser()
       
-      const tenantId = userData?.user?.id;
+      const tenantId = userData?.user?.id
       if (!tenantId) {
-        console.error("❌ No tenant ID found");
-        toast.error("User is not authenticated.");
-        return;
+        console.error("❌ No tenant ID found")
+        toast.error("User is not authenticated.")
+        return
       }
 
       const { data: existingBookings, error: checkError } = await supabase
@@ -132,9 +132,9 @@ export function BookingForm() {
         .select("*")
         .eq("property_id", selectedProperty)
         .or(`start_date.lte.${format(endDate, "yyyy-MM-dd")},end_date.gte.${format(startDate, "yyyy-MM-dd")}`)
-        .neq("status", "cancelled");
+        .neq("booking_status", "canceled")
 
-      if (checkError) throw checkError;
+      if (checkError) throw checkError
 
       if (existingBookings && existingBookings.length > 0) {
         toast.error("❌ This property is already booked for the selected dates")
@@ -152,19 +152,20 @@ export function BookingForm() {
         due_date: format(startDate, "yyyy-MM-dd"),
         amount_paid: 0,
         days_rented: calculateDays(startDate, endDate),
-        description: null
-      };
+        description: null,
+        booking_status: "active"
+      }
 
       const { error: bookingError } = await supabase
         .from("invoices")
-        .insert(bookingData);
+        .insert(bookingData)
 
       if (bookingError) {
-        console.error("❌ Booking error:", bookingError);
-        throw bookingError;
+        console.error("❌ Booking error:", bookingError)
+        throw bookingError
       }
 
-      await addToGoogleCalendar(bookingData);
+      await addToGoogleCalendar(bookingData)
 
       toast.success("✅ Booking successfully created!")
 

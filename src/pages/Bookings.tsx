@@ -16,11 +16,20 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import { Plus } from "lucide-react"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Input } from "@/components/ui/input"
+import { Plus, Search } from "lucide-react"
 import { format } from "date-fns"
 import { toast } from "sonner"
 import { supabase } from "@/integrations/supabase/client"
 import { BookingForm } from "@/components/BookingForm"
+import { useState } from "react"
 
 interface Booking {
   id: string
@@ -30,6 +39,7 @@ interface Booking {
   start_date: string
   end_date: string
   status: string
+  booking_status: string
   properties: {
     name: string
     address: string
@@ -37,7 +47,10 @@ interface Booking {
 }
 
 export default function Bookings() {
-  const { data: bookings, isLoading } = useQuery({
+  const [searchTerm, setSearchTerm] = useState("")
+  const [statusFilter, setStatusFilter] = useState<string>("all")
+
+  const { data: bookings, isLoading, refetch } = useQuery({
     queryKey: ["bookings"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -50,6 +63,7 @@ export default function Bookings() {
           start_date,
           end_date,
           status,
+          booking_status,
           properties:property_id (
             name,
             address
@@ -66,16 +80,28 @@ export default function Bookings() {
     try {
       const { error } = await supabase
         .from("invoices")
-        .update({ status: "cancelled" })
+        .update({ 
+          booking_status: "canceled",
+          status: "cancelled" 
+        })
         .eq("id", bookingId)
 
       if (error) throw error
+      
       toast.success("Booking cancelled successfully")
+      refetch()
     } catch (error) {
       console.error("Error cancelling booking:", error)
       toast.error("Failed to cancel booking")
     }
   }
+
+  const filteredBookings = bookings?.filter(booking => {
+    const matchesSearch = booking.properties?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         booking.properties?.address.toLowerCase().includes(searchTerm.toLowerCase())
+    const matchesStatus = statusFilter === "all" || booking.booking_status === statusFilter
+    return matchesSearch && matchesStatus
+  })
 
   if (isLoading) {
     return (
@@ -113,6 +139,29 @@ export default function Bookings() {
           </Dialog>
         </div>
 
+        <div className="flex gap-4 items-center">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Search properties..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="Filter by status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Bookings</SelectItem>
+              <SelectItem value="active">Active</SelectItem>
+              <SelectItem value="completed">Completed</SelectItem>
+              <SelectItem value="canceled">Canceled</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
         <div className="border rounded-lg">
           <Table>
             <TableHeader>
@@ -125,7 +174,7 @@ export default function Bookings() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {bookings?.map((booking) => (
+              {filteredBookings?.map((booking) => (
                 <TableRow key={booking.id}>
                   <TableCell className="font-medium">
                     {booking.properties?.name || "Unknown Property"}
@@ -144,9 +193,9 @@ export default function Bookings() {
                     )}
                   </TableCell>
                   <TableCell>{booking.amount.toLocaleString()} MAD</TableCell>
-                  <TableCell className="capitalize">{booking.status}</TableCell>
+                  <TableCell className="capitalize">{booking.booking_status}</TableCell>
                   <TableCell className="text-right">
-                    {booking.status !== "cancelled" && (
+                    {booking.booking_status === "active" && (
                       <Button
                         variant="destructive"
                         size="sm"
@@ -158,7 +207,7 @@ export default function Bookings() {
                   </TableCell>
                 </TableRow>
               ))}
-              {(!bookings || bookings.length === 0) && (
+              {(!filteredBookings || filteredBookings.length === 0) && (
                 <TableRow>
                   <TableCell colSpan={5} className="text-center py-8">
                     <p className="text-muted-foreground">No bookings found.</p>

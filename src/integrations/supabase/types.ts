@@ -132,6 +132,10 @@ export type Database = {
         Row: {
           amount: number
           amount_paid: number
+          booking_history: Json[] | null
+          booking_status: string | null
+          check_in_notes: string | null
+          check_out_notes: string | null
           created_at: string | null
           customer_id: string | null
           daily_rate: number
@@ -149,6 +153,10 @@ export type Database = {
         Insert: {
           amount: number
           amount_paid?: number
+          booking_history?: Json[] | null
+          booking_status?: string | null
+          check_in_notes?: string | null
+          check_out_notes?: string | null
           created_at?: string | null
           customer_id?: string | null
           daily_rate?: number
@@ -166,6 +174,10 @@ export type Database = {
         Update: {
           amount?: number
           amount_paid?: number
+          booking_history?: Json[] | null
+          booking_status?: string | null
+          check_in_notes?: string | null
+          check_out_notes?: string | null
           created_at?: string | null
           customer_id?: string | null
           daily_rate?: number
