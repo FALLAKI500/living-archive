@@ -15,12 +15,7 @@ import { addDays } from "date-fns"
 import { DateRange } from "react-day-picker"
 import { CustomerData } from "@/types/customer"
 
-interface QueryParams {
-  start_date?: string
-  end_date?: string
-  min_spent?: number | null
-  status?: string | null
-}
+type QueryParams = Record<string, string | number | null | undefined>
 
 export function CustomerDashboard() {
   const { toast } = useToast()
