@@ -35,14 +35,7 @@ export function CustomerDashboard() {
   const { data: customers, isLoading } = useQuery({
     queryKey: ["customers", dateRange, statusFilter, minSpent],
     queryFn: async () => {
-      const params: CustomerStatisticsParams = {
-        start_date: dateRange.from?.toISOString(),
-        end_date: dateRange.to?.toISOString(),
-        min_spent: minSpent,
-        status: statusFilter,
-      }
-
-      const { data, error } = await supabase.rpc('get_customer_statistics', params)
+      const { data, error } = await supabase.rpc('get_customer_statistics')
 
       if (error) {
         toast({
@@ -53,7 +46,31 @@ export function CustomerDashboard() {
         throw error
       }
 
-      return data as CustomerData[]
+      let filteredData = data as CustomerData[]
+
+      // Apply filters in JavaScript since the RPC doesn't support parameters
+      if (dateRange.from) {
+        filteredData = filteredData.filter(customer => 
+          customer.last_booking_date && new Date(customer.last_booking_date) >= dateRange.from!
+        )
+      }
+      if (dateRange.to) {
+        filteredData = filteredData.filter(customer => 
+          customer.last_booking_date && new Date(customer.last_booking_date) <= dateRange.to!
+        )
+      }
+      if (minSpent) {
+        filteredData = filteredData.filter(customer => 
+          customer.total_spent >= minSpent
+        )
+      }
+      if (statusFilter) {
+        filteredData = filteredData.filter(customer => 
+          customer.customer_status === statusFilter
+        )
+      }
+
+      return filteredData
     },
   })
 
