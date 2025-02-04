@@ -13,18 +13,7 @@ import { DataTable } from "@/components/ui/data-table"
 import { Button } from "@/components/ui/button"
 import { addDays } from "date-fns"
 import { DateRange } from "react-day-picker"
-
-interface CustomerData {
-  id: string
-  full_name: string | null
-  phone: string | null
-  city: string | null
-  company_name: string | null
-  total_bookings: number
-  total_spent: number
-  last_booking_date: string | null
-  customer_status: "Active" | "Overdue" | "New" | "Completed"
-}
+import { CustomerData } from "@/types/customer"
 
 export function CustomerDashboard() {
   const { toast } = useToast()

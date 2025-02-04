@@ -49,6 +49,17 @@ export default function Expenses() {
     },
   });
 
+  const { data: properties } = useQuery({
+    queryKey: ["properties"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("properties")
+        .select("*");
+      if (error) throw error;
+      return data;
+    },
+  });
+
   const addExpenseMutation = useMutation({
     mutationFn: async (expenseData: Expense) => {
       const { error } = await supabase.from("expenses").insert([expenseData]);
