@@ -202,6 +202,13 @@ export type Database = {
             referencedRelation: "property_revenue_summary"
             referencedColumns: ["property_id"]
           },
+          {
+            foreignKeyName: "invoices_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       notifications: {
