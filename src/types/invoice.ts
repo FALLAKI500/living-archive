@@ -8,7 +8,7 @@ export interface Invoice {
   amount_paid: number
   due_date: string
   status: InvoiceStatus
-  description?: string
+  description: string | null
   created_at?: string
   updated_at: string
   daily_rate: number

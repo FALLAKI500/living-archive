@@ -80,10 +80,9 @@ export function BookingForm() {
 
       const property = properties.find(p => p.id === bookingData.property_id);
       
-      const response = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
+      const response = await fetch('/api/calendar', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${Deno.env.get("GOOGLE_CALENDAR_API_KEY")}`,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
@@ -120,7 +119,6 @@ export function BookingForm() {
     setIsSubmitting(true)
     try {
       const { data: userData, error: userError } = await supabase.auth.getUser();
-      console.log("User Data:", userData);
       
       const tenantId = userData?.user?.id;
       if (!tenantId) {
@@ -128,7 +126,6 @@ export function BookingForm() {
         toast.error("User is not authenticated.");
         return;
       }
-      console.log("✅ Tenant ID:", tenantId);
 
       const { data: existingBookings, error: checkError } = await supabase
         .from("invoices")
@@ -151,24 +148,22 @@ export function BookingForm() {
         end_date: format(endDate, "yyyy-MM-dd"),
         daily_rate: dailyRate,
         amount: totalPrice,
-        status: "pending",
+        status: "pending" as const,
         due_date: format(startDate, "yyyy-MM-dd"),
         amount_paid: 0,
         days_rented: calculateDays(startDate, endDate),
+        description: null
       };
-
-      console.log("📌 Booking Data:", bookingData);
 
       const { error: bookingError } = await supabase
         .from("invoices")
-        .insert([bookingData]);
+        .insert(bookingData);
 
       if (bookingError) {
         console.error("❌ Booking error:", bookingError);
         throw bookingError;
       }
 
-      // Sync with Google Calendar
       await addToGoogleCalendar(bookingData);
 
       toast.success("✅ Booking successfully created!")
