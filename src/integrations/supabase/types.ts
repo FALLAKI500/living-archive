@@ -392,6 +392,54 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_settings: {
+        Row: {
+          created_at: string | null
+          email_notifications_enabled: boolean | null
+          google_calendar_enabled: boolean | null
+          language: Database["public"]["Enums"]["app_language"] | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          email_notifications_enabled?: boolean | null
+          google_calendar_enabled?: boolean | null
+          language?: Database["public"]["Enums"]["app_language"] | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          email_notifications_enabled?: boolean | null
+          google_calendar_enabled?: boolean | null
+          language?: Database["public"]["Enums"]["app_language"] | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       monthly_revenue_summary: {
@@ -429,12 +477,21 @@ export type Database = {
           last_booking_date: string
         }[]
       }
+      has_role: {
+        Args: {
+          user_id: string
+          required_role: Database["public"]["Enums"]["app_role"]
+        }
+        Returns: boolean
+      }
       update_monthly_revenue_summary: {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
     }
     Enums: {
+      app_language: "en" | "fr" | "ar"
+      app_role: "admin" | "manager" | "user"
       expense_category:
         | "maintenance"
         | "utilities"
