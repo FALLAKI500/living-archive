@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast } from "sonner"
 import { supabase } from "@/integrations/supabase/client"
 import type { Property } from "@/types/property"
+import { Calendar } from "lucide-react"
 
 export function BookingForm() {
   const [properties, setProperties] = useState<Property[]>([])
@@ -23,6 +24,7 @@ export function BookingForm() {
   const [totalPrice, setTotalPrice] = useState(0)
   const [isLoading, setIsLoading] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isCalendarSyncing, setIsCalendarSyncing] = useState(false)
 
   useEffect(() => {
     fetchProperties()
@@ -63,6 +65,52 @@ export function BookingForm() {
     return Math.max(1, Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)))
   }
 
+  const addToGoogleCalendar = async (bookingData: any) => {
+    setIsCalendarSyncing(true)
+    try {
+      const { data: settings } = await supabase
+        .from('user_settings')
+        .select('google_calendar_enabled')
+        .single();
+
+      if (!settings?.google_calendar_enabled) {
+        console.log("Google Calendar integration is disabled");
+        return;
+      }
+
+      const property = properties.find(p => p.id === bookingData.property_id);
+      
+      const response = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${Deno.env.get("GOOGLE_CALENDAR_API_KEY")}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          summary: `Booking: ${property?.name}`,
+          description: `Rental booking for ${property?.name}`,
+          start: {
+            date: format(startDate!, 'yyyy-MM-dd'),
+          },
+          end: {
+            date: format(endDate!, 'yyyy-MM-dd'),
+          },
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to sync with Google Calendar');
+      }
+
+      toast.success("✅ Booking synced with Google Calendar");
+    } catch (error) {
+      console.error("❌ Calendar sync error:", error);
+      toast.error("Failed to sync with Google Calendar");
+    } finally {
+      setIsCalendarSyncing(false);
+    }
+  };
+
   const handleBooking = async () => {
     if (!selectedProperty || !startDate || !endDate) {
       toast.error("❌ Please complete all fields")
@@ -71,7 +119,6 @@ export function BookingForm() {
 
     setIsSubmitting(true)
     try {
-      // 🔍 **جلب `tenant_id`**
       const { data: userData, error: userError } = await supabase.auth.getUser();
       console.log("User Data:", userData);
       
@@ -83,7 +130,6 @@ export function BookingForm() {
       }
       console.log("✅ Tenant ID:", tenantId);
 
-      // 🔍 **التحقق من الحجوزات السابقة**
       const { data: existingBookings, error: checkError } = await supabase
         .from("invoices")
         .select("*")
@@ -98,8 +144,7 @@ export function BookingForm() {
         return
       }
 
-      // 🔍 **التأكد من صحة البيانات قبل الإرسال**
-      console.log("📌 Booking Data:", {
+      const bookingData = {
         property_id: selectedProperty,
         tenant_id: tenantId,
         start_date: format(startDate, "yyyy-MM-dd"),
@@ -110,32 +155,24 @@ export function BookingForm() {
         due_date: format(startDate, "yyyy-MM-dd"),
         amount_paid: 0,
         days_rented: calculateDays(startDate, endDate),
-      });
+      };
 
-      // 🔥 **إنشاء الحجز في Supabase**
-      const { error: bookingError } = await supabase.from("invoices").insert([
-        {
-          property_id: selectedProperty,
-          tenant_id: tenantId,
-          start_date: format(startDate, "yyyy-MM-dd"),
-          end_date: format(endDate, "yyyy-MM-dd"),
-          daily_rate: dailyRate,
-          amount: totalPrice,
-          status: "pending",
-          due_date: format(startDate, "yyyy-MM-dd"),
-          amount_paid: 0,
-          days_rented: calculateDays(startDate, endDate),
-        },
-      ]);
+      console.log("📌 Booking Data:", bookingData);
+
+      const { error: bookingError } = await supabase
+        .from("invoices")
+        .insert([bookingData]);
 
       if (bookingError) {
         console.error("❌ Booking error:", bookingError);
         throw bookingError;
       }
 
+      // Sync with Google Calendar
+      await addToGoogleCalendar(bookingData);
+
       toast.success("✅ Booking successfully created!")
 
-      // 🔄 **إعادة تعيين النموذج**
       setSelectedProperty("")
       setStartDate(undefined)
       setEndDate(undefined)
@@ -184,8 +221,13 @@ export function BookingForm() {
 
         <p className="text-lg font-semibold">Total Price: {totalPrice.toLocaleString()} MAD</p>
 
-        <Button onClick={handleBooking} disabled={isSubmitting || !selectedProperty || !startDate || !endDate}>
+        <Button 
+          onClick={handleBooking} 
+          disabled={isSubmitting || !selectedProperty || !startDate || !endDate}
+          className="w-full"
+        >
           {isSubmitting ? "Creating booking..." : "Confirm Booking"}
+          {isCalendarSyncing && <Calendar className="ml-2 h-4 w-4 animate-spin" />}
         </Button>
       </CardContent>
     </Card>
