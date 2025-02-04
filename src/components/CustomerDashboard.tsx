@@ -15,11 +15,8 @@ import { addDays } from "date-fns"
 import { DateRange } from "react-day-picker"
 import { CustomerData } from "@/types/customer"
 
-interface QueryParams {
-  start_date: string | undefined
-  end_date: string | undefined
-  min_spent: number | null
-  status: string | null
+type QueryParams = {
+  [key: string]: string | number | null | undefined
 }
 
 export function CustomerDashboard() {
