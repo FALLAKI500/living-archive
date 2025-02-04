@@ -36,9 +36,6 @@ import { supabase } from "@/integrations/supabase/client"
 import { format } from "date-fns"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
-import type { Invoice } from "@/types/invoice"
-
-// Remove the duplicate Invoice interface definition and use the imported type
 
 export default function Invoices() {
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -58,7 +55,6 @@ export default function Invoices() {
 
       if (error) throw error
       
-      // Add the required updated_at field with a default value if not present
       return (data as Invoice[]).map(invoice => ({
         ...invoice,
         updated_at: invoice.updated_at || new Date().toISOString()
@@ -66,7 +62,6 @@ export default function Invoices() {
     },
   })
 
-  // Set up real-time subscription
   useEffect(() => {
     const channel = supabase
       .channel('schema-db-changes')

@@ -29,24 +29,13 @@ import { Plus, Loader2 } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-
-type Expense = {
-  id?: string;
-  user_id?: string;
-  amount: number;
-  category: string;
-  description?: string;
-  date: string;
-  payment_method?: string;
-  property_id?: string | null;
-};
+import { Expense, ExpenseCategory } from "@/types/expense";
 
 export default function Expenses() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const queryClient = useQueryClient();
 
-  // ✅ جلب قائمة المصروفات
   const { data: expenses, isLoading } = useQuery({
     queryKey: ["expenses"],
     queryFn: async () => {
@@ -60,18 +49,6 @@ export default function Expenses() {
     },
   });
 
-  // ✅ جلب قائمة العقارات
-  const { data: properties } = useQuery({
-    queryKey: ["properties"],
-    queryFn: async () => {
-      const { data, error } = await supabase.from("properties").select("id, name");
-
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  // ✅ تعريف دالة إدراج المصروفات مع التحديث التلقائي للبيانات
   const addExpenseMutation = useMutation({
     mutationFn: async (expenseData: Expense) => {
       const { error } = await supabase.from("expenses").insert([expenseData]);
@@ -79,7 +56,7 @@ export default function Expenses() {
     },
     onSuccess: () => {
       toast.success("Expense added successfully");
-      queryClient.invalidateQueries(["expenses"]); // 🔄 تحديث البيانات فورًا
+      queryClient.invalidateQueries({ queryKey: ["expenses"] });
       setIsDialogOpen(false);
     },
     onError: (error) => {
@@ -88,13 +65,11 @@ export default function Expenses() {
     },
   });
 
-  // ✅ دالة التعامل مع إضافة مصروف جديد
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     try {
-      // 🔹 جلب بيانات المستخدم الحالي
       const { data: user, error: userError } = await supabase.auth.getUser();
       if (userError || !user || !user.user) {
         toast.error("User not authenticated");
@@ -102,19 +77,17 @@ export default function Expenses() {
         return;
       }
 
-      // 🔹 تجهيز البيانات قبل الإدخال
       const formData = new FormData(e.currentTarget);
       const expenseData: Expense = {
-        user_id: user.user.id, // ✅ إضافة معرف المستخدم
+        user_id: user.user.id,
         amount: Number(formData.get("amount")),
-        category: formData.get("category") as string,
-        description: formData.get("description") as string || null,
-        date: formData.get("date") as string,
-        payment_method: formData.get("payment_method") as string,
-        property_id: formData.get("property_id") ? formData.get("property_id") : null,
+        category: formData.get("category") as ExpenseCategory,
+        description: formData.get("description")?.toString() || null,
+        date: formData.get("date")?.toString() || format(new Date(), "yyyy-MM-dd"),
+        payment_method: formData.get("payment_method")?.toString(),
+        property_id: formData.get("property_id")?.toString() || null,
       };
 
-      // 🔹 إدراج البيانات في قاعدة البيانات
       await addExpenseMutation.mutateAsync(expenseData);
     } catch (error) {
       console.error("Error adding expense:", error);
@@ -124,7 +97,6 @@ export default function Expenses() {
     }
   };
 
-  // ✅ عرض شاشة تحميل عند تحميل البيانات
   if (isLoading) {
     return (
       <Layout>

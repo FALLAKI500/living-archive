@@ -23,7 +23,7 @@ interface CustomerData {
   total_bookings: number
   total_spent: number
   last_booking_date: string | null
-  customer_status: string
+  customer_status: "Active" | "Overdue" | "New" | "Completed"
 }
 
 export function CustomerDashboard() {
