@@ -16,10 +16,7 @@ import { DateRange } from "react-day-picker"
 import { CustomerData } from "@/types/customer"
 
 type CustomerStatisticsParams = {
-  start_date: string | undefined
-  end_date: string | undefined
-  min_spent: number | null
-  status: string | null
+  [key: string]: string | number | null | undefined;
 }
 
 export function CustomerDashboard() {
